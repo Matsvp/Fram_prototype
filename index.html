@@ -3,835 +3,1073 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FRAM – Prototype: enklere billettkjøp</title>
+  <title>FRAM – Enkel billettkjøp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#F5F7FA;
-      --card:#FFFFFF;
-      --text:#111827;
-      --muted:#6B7280;
-      --line:#E5E7EB;
-      --accent:#1F7A8C;     /* aksentfarge */
-      --accent2:#0B4F5B;
-      --warn:#B45309;
-      --ok:#047857;
-      --shadow: 0 10px 25px rgba(17,24,39,.08);
-      --radius:18px;
-      --radius2:14px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    :root {
+      --bg: #F8F9FA;
+      --card: #FFFFFF;
+      --text: #1A1A1A;
+      --text-secondary: #6B7280;
+      --border: #E8EAED;
+      --primary: #00796B;
+      --primary-light: rgba(0,121,107,0.08);
+      --primary-dark: #005A4F;
+      --success: #00C853;
+      --warning: #FF9100;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+      --radius-sm: 12px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:var(--sans);
-      background: radial-gradient(1200px 500px at 50% -100px, rgba(31,122,140,.15), transparent 60%), var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: var(--font);
+      background: linear-gradient(180deg, #E0F2F1 0%, var(--bg) 30%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: var(--text);
     }
 
-    .wrap{
-      width:min(980px, 100%);
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:18px;
-      align-items:start;
-      justify-items:center;
-    }
-
-    .topbar{
-      width: min(980px, 100%);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      background: rgba(31,122,140,.10);
-      border:1px solid rgba(31,122,140,.20);
-      border-radius:999px;
-      font-size:13px;
-      color: var(--accent2);
-      box-shadow: 0 4px 10px rgba(31,122,140,.08);
-    }
-    .badge b{font-weight:700}
-
-    .helper{
-      width:min(980px,100%);
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-      padding:14px 16px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.7);
-      border-radius: var(--radius2);
-    }
-    .helper h3{
-      margin:0;
-      font-size:14px;
-      color:#0f172a;
-      letter-spacing:.2px;
-    }
-    .helper p{
-      margin:0;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.35;
-    }
-    .helper .row{
-      display:flex; gap:10px; flex-wrap:wrap;
-      font-size:12px; color:var(--muted);
-    }
-    .chip{
-      background:#fff;
-      border:1px solid var(--line);
-      padding:7px 10px;
-      border-radius:999px;
-    }
-
-    /* Phone frame */
-    .phone{
-      width: 390px; /* iPhone-ish */
-      max-width: 92vw;
-      border-radius: 34px;
-      background: #0b1220;
-      padding: 12px;
-      box-shadow: 0 30px 70px rgba(17,24,39,.25);
-      position:relative;
-    }
-    .screen{
+    /* Phone Container */
+    .phone {
+      width: 375px;
+      max-width: 100%;
       background: var(--bg);
-      border-radius: 26px;
-      overflow:hidden;
-      min-height: 760px;
-      display:flex;
-      flex-direction:column;
+      border-radius: 40px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.15), inset 0 0 0 12px #1a1a1a;
+      overflow: hidden;
+      position: relative;
     }
 
-    .appHeader{
-      background: #FFFFFF;
-      border-bottom: 1px solid var(--line);
-      padding: 14px 16px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-    }
-    .logo{
-      width:34px; height:34px; border-radius:12px;
-      background: linear-gradient(135deg, var(--accent), #53B7C5);
-      box-shadow: 0 10px 18px rgba(31,122,140,.22);
-    }
-    .brandText{
-      display:flex; flex-direction:column; line-height:1.05;
-    }
-    .brandText b{font-size:14px}
-    .brandText span{font-size:12px; color:var(--muted)}
-    .iconBtn{
-      border:1px solid var(--line);
-      background:#fff;
-      border-radius: 12px;
-      padding: 8px 10px;
-      cursor:pointer;
-      font-size:12px;
-      color:#111827;
-    }
-    .iconBtn:active{transform: translateY(1px)}
-    .content{
-      padding: 14px 16px 120px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      flex:1;
-    }
-
-    .card{
-      background: var(--card);
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: var(--shadow);
-    }
-    .card h2{
-      margin:0 0 6px;
-      font-size:16px;
-      letter-spacing:.2px;
-    }
-    .muted{color:var(--muted)}
-    .small{font-size:12px}
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .col{display:flex; flex-direction:column; gap:6px}
-    .divider{
-      height:1px;
-      background: var(--line);
-      margin: 10px 0;
-    }
-
-    .input{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      margin-top:8px;
-    }
-    label{font-size:12px; color:var(--muted)}
-    input, select{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size:14px;
-      outline:none;
-    }
-    input:focus, select:focus{
-      border-color: rgba(31,122,140,.55);
-      box-shadow: 0 0 0 4px rgba(31,122,140,.12);
-    }
-
-    .primary{
-      background: var(--accent);
-      color:#fff;
-      border:1px solid rgba(0,0,0,.05);
-      border-radius: 16px;
-      padding: 12px 14px;
-      cursor:pointer;
-      font-weight:650;
-      font-size:14px;
-      box-shadow: 0 16px 30px rgba(31,122,140,.22);
-    }
-    .primary:active{transform: translateY(1px)}
-    .secondary{
-      background:#fff;
-      color:#111827;
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px 14px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:14px;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .pill b{color:#111827}
-
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(31,122,140,.10);
-      border:1px solid rgba(31,122,140,.18);
-      font-size:12px;
-      color: var(--accent2);
-      font-weight:650;
-      width:fit-content;
-    }
-
-    .steps{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .step{
-      padding:8px 10px;
-      border:1px dashed rgba(31,122,140,.35);
-      background: rgba(31,122,140,.06);
-      border-radius: 14px;
-      font-size:12px;
-      color:#0b3d45;
-    }
-
-    .bottomBar{
-      position:absolute;
-      left:12px; right:12px; bottom:12px;
-      background: rgba(255,255,255,.94);
-      border:1px solid var(--line);
-      border-radius: 22px;
-      padding: 10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      box-shadow: 0 20px 50px rgba(17,24,39,.18);
-      backdrop-filter: blur(8px);
-    }
-    .bottomBar .mini{
-      display:flex; flex-direction:column; gap:2px;
-    }
-    .bottomBar .mini b{font-size:13px}
-    .bottomBar .mini span{font-size:12px; color:var(--muted)}
-    .toast{
-      background: rgba(17,24,39,.92);
-      color:#fff;
-      border-radius: 16px;
-      padding: 10px 12px;
-      font-size: 12px;
-      position: fixed;
-      top: 18px;
+    .notch {
+      position: absolute;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .25s ease;
-      max-width: 92vw;
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      width: 120px;
+      height: 28px;
+      background: #1a1a1a;
+      border-radius: 20px;
+      z-index: 100;
     }
-    .toast.show{opacity:1}
-    .kpi{
-      display:grid;
+
+    .screen {
+      background: var(--bg);
+      min-height: 720px;
+      padding-top: 52px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--card);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
+    }
+
+    .header-btn:active { transform: scale(0.95); }
+
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--text);
+    }
+
+    /* Content */
+    .content {
+      flex: 1;
+      padding: 0 16px 120px;
+      overflow-y: auto;
+    }
+
+    /* Search Card */
+    .search-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 12px;
+    }
+
+    .route-input {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .route-dots {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 0;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .dot-line {
+      width: 2px;
+      flex: 1;
+      background: var(--border);
+      min-height: 24px;
+    }
+
+    .dot.outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+    }
+
+    .route-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .field:hover, .field:focus-within {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .field-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .field input {
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      width: 100%;
+      outline: none;
+      font-family: var(--font);
+    }
+
+    /* Options Row */
+    .options-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .option-chip {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .option-chip:hover {
+      border-color: var(--primary);
+    }
+
+    .option-chip svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-secondary);
+    }
+
+    .option-chip span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* CTA Button */
+    .cta-btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.2s ease;
+      font-family: var(--font);
+    }
+
+    .cta-btn:hover { background: var(--primary-dark); }
+    .cta-btn:active { transform: scale(0.98); }
+    .cta-btn:disabled {
+      background: var(--border);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    /* Ticket Card */
+    .ticket-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 12px;
+    }
+
+    .ticket-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
+      color: white;
+      padding: 16px 20px;
+    }
+
+    .ticket-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .ticket-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .ticket-price {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .ticket-price span {
+      font-size: 16px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .ticket-body {
+      padding: 16px 20px;
+    }
+
+    .ticket-info {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-item {
+      flex: 1;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+
+    .info-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .ticket-reason {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+    }
+
+    .ticket-reason svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--primary);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .ticket-reason p {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .ticket-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font);
+    }
+
+    .btn-secondary:hover { background: var(--border); }
+
+    .btn-primary {
+      flex: 2;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font);
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    /* Summary Card */
+    .summary-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 12px;
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .summary-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .summary-edit {
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .summary-route {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .summary-route svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--primary);
+    }
+
+    .summary-route-text {
+      font-size: 14px;
+    }
+
+    .summary-route-text strong {
+      display: block;
+      font-weight: 600;
+    }
+
+    .summary-route-text span {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    /* Checkout */
+    .checkout-section {
+      margin-top: 16px;
+    }
+
+    .checkout-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .payment-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .payment-option {
+      flex: 1;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .payment-option.active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .payment-option span {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Active Ticket */
+    .active-ticket {
+      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      color: white;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .active-ticket::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+    }
+
+    .active-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--success);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .active-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .active-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .active-time {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .active-grid {
+      display: grid;
       grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-top:8px;
+      gap: 12px;
     }
-    .kpi .box{
-      border:1px solid var(--line);
-      border-radius: 16px;
-      background:#fff;
-      padding:10px;
-    }
-    .kpi .box b{font-size:13px}
-    .kpi .box span{display:block; margin-top:2px; font-size:12px; color:var(--muted)}
-    .ok{color:var(--ok); font-weight:700}
-    .warn{color:var(--warn); font-weight:700}
 
-    .mono{font-family:var(--mono)}
-    .hidden{display:none !important;}
-
-    /* Desktop layout helper */
-    @media (min-width: 900px){
-      .wrap{grid-template-columns: 430px 1fr; justify-items:start;}
-      .helper{position:sticky; top:18px}
-      .topbar{grid-column: 1 / -1;}
+    .active-item {
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 12px;
     }
+
+    .active-item-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .active-item-value {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* Bottom Bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 16px 20px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bottom-info {
+      flex: 1;
+    }
+
+    .bottom-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .bottom-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .bottom-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font);
+    }
+
+    .bottom-btn:hover { background: var(--primary-dark); }
+    .bottom-btn:active { transform: scale(0.98); }
+    .bottom-btn:disabled {
+      background: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    /* Utility */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="toast" id="toast">Lagret</div>
+  <div class="toast" id="toast"></div>
 
-  <div class="wrap">
-    <div class="topbar">
-      <div class="badge"><b>Prototype</b> · FRAM billettkjøp (for sporadiske)</div>
-      <button class="iconBtn" id="resetBtn" title="Start på nytt">↺ Reset</button>
-    </div>
-
-    <div class="phone" aria-label="Mobilprototype">
-      <div class="screen">
-        <div class="appHeader">
-          <div class="brand">
-            <div class="logo" aria-hidden="true"></div>
-            <div class="brandText">
-              <b>FRAM</b>
-              <span id="headerSubtitle">Reise & billett</span>
-            </div>
-          </div>
-          <button class="iconBtn" id="helpBtn">Hjelp</button>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="header">
+        <div class="logo-group">
+          <div class="logo">F</div>
+          <span class="logo-text">FRAM</span>
         </div>
-
-        <div class="content" id="viewRoot"></div>
+        <button class="header-btn" id="menuBtn">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
       </div>
 
-      <div class="bottomBar" id="bottomBar">
-        <div class="mini">
-          <b id="bbTitle">Ingen billett valgt</b>
-          <span id="bbSub">Start med å søke reise</span>
+      <div class="content" id="viewRoot"></div>
+
+      <div class="bottom-bar" id="bottomBar">
+        <div class="bottom-info">
+          <div class="bottom-title" id="bbTitle">Velg reise</div>
+          <div class="bottom-sub" id="bbSub">Fyll inn fra og til</div>
         </div>
-        <button class="primary" id="bbCta" disabled>Fortsett</button>
-      </div>
-    </div>
-
-    <div class="helper">
-      <h3>Hva dere kan teste med denne prototypen</h3>
-      <p>
-        Målet er å se om sporadiske reisende klarer å kjøpe riktig billett uten å forstå soner/regler.
-        Bruk 4–6 deltakere og mål: tid, feilvalg og usikkerhet.
-      </p>
-      <div class="row">
-        <span class="chip">Oppgave: “Kjøp billett for turen din”</span>
-        <span class="chip">Mål: &lt; 60 sek</span>
-        <span class="chip">Spør: “Hvor trygg er du (1–5)?”</span>
-      </div>
-      <div class="row">
-        <span class="chip">Fokus: Smart forslag</span>
-        <span class="chip">Fokus: Soneforklaring 1 linje</span>
-        <span class="chip">Fokus: Trygg utsjekk</span>
+        <button class="bottom-btn" id="bbBtn" disabled>Søk</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ---- Simple state machine prototype (no frameworks) ----
-    const $ = (id) => document.getElementById(id);
+    const $ = id => document.getElementById(id);
 
     const state = {
-      view: "search", // search | suggestion | checkout | ticket
-      from: "Molde trafikkterminal",
-      to: "Ålesund sentrum",
-      time: "Nå",
-      passenger: "Voksen",
-      ticket: null, // {name, price, zones, validFor, why}
-      payment: "Vipps",
-      ticketActiveAt: null
+      view: 'search',
+      from: 'Molde trafikkterminal',
+      to: 'Ålesund sentrum',
+      time: 'Nå',
+      passenger: 'Voksen',
+      ticket: null,
+      payment: 'Vipps',
+      activeAt: null
     };
 
-    const ticketsCatalog = [
+    const tickets = [
       {
-        id: "single_a-b",
-        name: "Enkeltbillett",
+        id: 'single',
+        name: 'Enkeltbillett',
         price: 44,
-        zones: "Sone A–B",
-        validFor: "Gyldig i 60 min",
-        why: "Passer for én tur mellom Molde og Ålesund.",
-        confidence: "Høy treff"
+        zones: 'Sone A–B',
+        validFor: '60 min',
+        why: 'Dekker hele reisen din fra Molde til Ålesund.',
+        tag: 'Anbefalt'
       },
       {
-        id: "daypass_ab",
-        name: "24-timersbillett",
+        id: 'day',
+        name: '24-timersbillett',
         price: 119,
-        zones: "Sone A–B",
-        validFor: "Gyldig i 24 t",
-        why: "Lønner seg hvis du skal reise flere ganger i dag.",
-        confidence: "Alternativ"
+        zones: 'Sone A–B',
+        validFor: '24 timer',
+        why: 'Lønner seg ved 3+ reiser samme dag.',
+        tag: 'Alternativ'
       }
     ];
 
-    function toast(msg){
-      const t = $("toast");
+    function toast(msg) {
+      const t = $('toast');
       t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(()=>t.classList.remove("show"), 1500);
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function formatTimeNow(){
+    function formatTime() {
       const d = new Date();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
+      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     }
 
-    function setBottomBar({title, sub, ctaText, enabled, onClick}){
-      $("bbTitle").textContent = title;
-      $("bbSub").textContent = sub;
-      const btn = $("bbCta");
-      btn.textContent = ctaText;
+    function updateBottom(title, sub, btnText, enabled, onClick) {
+      $('bbTitle').textContent = title;
+      $('bbSub').textContent = sub;
+      const btn = $('bbBtn');
+      btn.textContent = btnText;
       btn.disabled = !enabled;
-      btn.onclick = onClick || null;
+      btn.onclick = onClick;
     }
 
-    function headerSubtitle(text){
-      $("headerSubtitle").textContent = text;
-    }
+    function render() {
+      const root = $('viewRoot');
+      root.innerHTML = '';
 
-    function render(){
-      const root = $("viewRoot");
-      root.innerHTML = "";
-
-      $("bottomBar").classList.remove("hidden");
-
-      if(state.view === "search"){
-        headerSubtitle("Reisesøk");
+      if (state.view === 'search') {
         root.appendChild(viewSearch());
-        setBottomBar({
-          title: "Søk reise",
-          sub: "Få smart billettforslag",
-          ctaText: "Vis forslag",
-          enabled: true,
-          onClick: () => {
-            // Choose default recommended ticket
-            state.ticket = ticketsCatalog[0];
-            state.view = "suggestion";
-            toast("Forslag klart");
-            render();
-          }
+        updateBottom('Klar til søk', `${state.from} → ${state.to}`, 'Finn billett', true, () => {
+          state.ticket = tickets[0];
+          state.view = 'suggestion';
+          render();
         });
       }
 
-      if(state.view === "suggestion"){
-        headerSubtitle("Smart forslag");
+      if (state.view === 'suggestion') {
         root.appendChild(viewSuggestion());
-        setBottomBar({
-          title: state.ticket ? `${state.ticket.name} · ${state.ticket.price} kr` : "Velg billett",
-          sub: state.ticket ? `${state.ticket.zones} · ${state.ticket.validFor}` : "Ingen valgt",
-          ctaText: "Gå til betaling",
-          enabled: !!state.ticket,
-          onClick: () => {
-            state.view = "checkout";
-            render();
-          }
-        });
+        updateBottom(
+          state.ticket ? `${state.ticket.name}` : 'Velg billett',
+          state.ticket ? `${state.ticket.price} kr · ${state.ticket.validFor}` : '',
+          'Gå til betaling',
+          !!state.ticket,
+          () => { state.view = 'checkout'; render(); }
+        );
       }
 
-      if(state.view === "checkout"){
-        headerSubtitle("Utsjekk");
+      if (state.view === 'checkout') {
         root.appendChild(viewCheckout());
-        setBottomBar({
-          title: `Å betale: ${state.ticket.price} kr`,
-          sub: "Sjekk oppsummeringen først",
-          ctaText: "Betal",
-          enabled: true,
-          onClick: () => {
-            state.ticketActiveAt = formatTimeNow();
-            state.view = "ticket";
-            toast("Kjøp fullført");
+        updateBottom(
+          `Total: ${state.ticket.price} kr`,
+          `Betaling med ${state.payment}`,
+          'Betal nå',
+          true,
+          () => {
+            state.activeAt = formatTime();
+            state.view = 'ticket';
+            toast('Billett kjøpt!');
             render();
           }
-        });
+        );
       }
 
-      if(state.view === "ticket"){
-        headerSubtitle("Din billett");
+      if (state.view === 'ticket') {
         root.appendChild(viewTicket());
-        setBottomBar({
-          title: "Billett aktiv",
-          sub: "Vis ved kontroll",
-          ctaText: "Kjøp ny",
-          enabled: true,
-          onClick: () => {
-            state.view = "search";
-            state.ticket = null;
-            state.ticketActiveAt = null;
-            render();
-          }
+        updateBottom('Billett aktiv', 'Vis ved kontroll', 'Ny reise', true, () => {
+          state.view = 'search';
+          state.ticket = null;
+          state.activeAt = null;
+          render();
         });
       }
     }
 
-    function viewSearch(){
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h2>Hvor skal du?</h2>
-        <div class="muted small">Start i din situasjon: hvor–til–når.</div>
-
-        <div class="input">
-          <label for="from">Fra</label>
-          <input id="from" value="${escapeHtml(state.from)}" />
-        </div>
-        <div class="input">
-          <label for="to">Til</label>
-          <input id="to" value="${escapeHtml(state.to)}" />
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="input" style="flex:1;margin:0">
-            <label for="time">Når</label>
-            <select id="time">
-              <option ${state.time==="Nå"?"selected":""}>Nå</option>
-              <option ${state.time==="Senere i dag"?"selected":""}>Senere i dag</option>
-              <option ${state.time==="I morgen"?"selected":""}>I morgen</option>
-            </select>
+    function viewSearch() {
+      const el = document.createElement('div');
+      el.className = 'animate-in';
+      el.innerHTML = `
+        <div class="search-card">
+          <div class="route-input">
+            <div class="route-dots">
+              <div class="dot"></div>
+              <div class="dot-line"></div>
+              <div class="dot outline"></div>
+            </div>
+            <div class="route-fields">
+              <div class="field">
+                <div class="field-label">Fra</div>
+                <input type="text" id="fromInput" value="${esc(state.from)}" />
+              </div>
+              <div class="field">
+                <div class="field-label">Til</div>
+                <input type="text" id="toInput" value="${esc(state.to)}" />
+              </div>
+            </div>
           </div>
-          <div class="input" style="flex:1;margin:0">
-            <label for="passenger">Reisende</label>
-            <select id="passenger">
-              <option ${state.passenger==="Voksen"?"selected":""}>Voksen</option>
-              <option ${state.passenger==="Student"?"selected":""}>Student</option>
-              <option ${state.passenger==="Barn"?"selected":""}>Barn</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="divider"></div>
-        <div class="pill">
-          <b>Tips:</b> Du trenger ikke kunne soner — vi foreslår riktig billett.
-        </div>
-        <div class="steps" aria-label="Prosess">
-          <span class="step">1. Søk reise</span>
-          <span class="step">2. Få forslag</span>
-          <span class="step">3. Sjekk & betal</span>
-          <span class="step">4. Se gyldighet</span>
+          <div class="options-row">
+            <div class="option-chip" id="timeChip">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <span id="timeLabel">${esc(state.time)}</span>
+            </div>
+            <div class="option-chip" id="passengerChip">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+              <span id="passengerLabel">${esc(state.passenger)}</span>
+            </div>
+          </div>
         </div>
       `;
 
-      const from = card.querySelector("#from");
-      const to = card.querySelector("#to");
-      const time = card.querySelector("#time");
-      const passenger = card.querySelector("#passenger");
+      el.querySelector('#fromInput').addEventListener('input', e => { state.from = e.target.value; });
+      el.querySelector('#toInput').addEventListener('input', e => { state.to = e.target.value; });
 
-      from.addEventListener("input", e => state.from = e.target.value);
-      to.addEventListener("input", e => state.to = e.target.value);
-      time.addEventListener("change", e => state.time = e.target.value);
-      passenger.addEventListener("change", e => state.passenger = e.target.value);
-
-      return wrapSection("Reisesøk", "Finn reise først – billett kommer etterpå.", card);
-    }
-
-    function viewSuggestion(){
-      const wrap = document.createElement("div");
-
-      const summary = document.createElement("div");
-      summary.className = "card";
-      summary.innerHTML = `
-        <div class="row">
-          <div class="col">
-            <h2 style="margin:0">Reise: ${escapeHtml(state.from)} → ${escapeHtml(state.to)}</h2>
-            <div class="muted small">Når: ${escapeHtml(state.time)} · Reisende: ${escapeHtml(state.passenger)}</div>
-          </div>
-          <button class="secondary" id="editTrip">Endre</button>
-        </div>
-      `;
-      summary.querySelector("#editTrip").onclick = () => {
-        state.view = "search";
-        render();
+      el.querySelector('#timeChip').onclick = () => {
+        const opts = ['Nå', 'Senere i dag', 'I morgen'];
+        const idx = opts.indexOf(state.time);
+        state.time = opts[(idx + 1) % opts.length];
+        el.querySelector('#timeLabel').textContent = state.time;
       };
 
-      const recommended = document.createElement("div");
-      recommended.className = "card";
-      const rec = ticketsCatalog[0];
-      recommended.innerHTML = `
-        <div class="tag">Anbefalt · ${rec.confidence}</div>
-        <h2 style="margin-top:10px">${rec.name} · ${rec.price} kr</h2>
-        <div class="pill"><b>${rec.zones}</b> · ${rec.validFor}</div>
-        <div class="divider"></div>
-        <div class="muted small"><span class="mono">Hvorfor?</span> ${rec.why}</div>
+      el.querySelector('#passengerChip').onclick = () => {
+        const opts = ['Voksen', 'Student', 'Barn'];
+        const idx = opts.indexOf(state.passenger);
+        state.passenger = opts[(idx + 1) % opts.length];
+        el.querySelector('#passengerLabel').textContent = state.passenger;
+      };
 
-        <div class="kpi">
-          <div class="box">
-            <b>Trygghet</b>
-            <span class="ok">“Riktig billett” forklart</span>
-          </div>
-          <div class="box">
-            <b>Sonehjelp</b>
-            <span>Én linje, ikke regeltekst</span>
+      return el;
+    }
+
+    function viewSuggestion() {
+      const el = document.createElement('div');
+      el.className = 'animate-in';
+
+      const rec = tickets[0];
+      const alt = tickets[1];
+
+      el.innerHTML = `
+        <div class="summary-card">
+          <div class="summary-route">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+            <div class="summary-route-text">
+              <strong>${esc(state.from)} → ${esc(state.to)}</strong>
+              <span>${esc(state.time)} · ${esc(state.passenger)}</span>
+            </div>
           </div>
         </div>
 
-        <div class="divider"></div>
-        <div class="row">
-          <button class="secondary" id="other">Se alternativ</button>
-          <button class="primary" id="choose">Velg anbefalt</button>
+        <div class="ticket-card" id="recCard">
+          <div class="ticket-header">
+            <div class="ticket-badge">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+              ${rec.tag}
+            </div>
+            <div class="ticket-name">${rec.name}</div>
+            <div class="ticket-price">${rec.price} <span>kr</span></div>
+          </div>
+          <div class="ticket-body">
+            <div class="ticket-info">
+              <div class="info-item">
+                <div class="info-label">Soner</div>
+                <div class="info-value">${rec.zones}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Gyldig</div>
+                <div class="info-value">${rec.validFor}</div>
+              </div>
+            </div>
+            <div class="ticket-reason">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+              </svg>
+              <p>${rec.why}</p>
+            </div>
+            <div class="ticket-actions">
+              <button class="btn-secondary" id="altBtn">Se alternativ</button>
+              <button class="btn-primary" id="selectBtn">Velg denne</button>
+            </div>
+          </div>
         </div>
       `;
 
-      recommended.querySelector("#choose").onclick = () => {
+      el.querySelector('#selectBtn').onclick = () => {
         state.ticket = rec;
-        toast("Anbefalt valgt");
+        toast('Billett valgt');
         render();
       };
 
-      recommended.querySelector("#other").onclick = () => {
-        // Toggle to alternative ticket
-        const alt = ticketsCatalog[1];
+      el.querySelector('#altBtn').onclick = () => {
         state.ticket = alt;
-        toast("Alternativ valgt");
+        toast('Alternativ valgt');
         render();
       };
 
-      const note = document.createElement("div");
-      note.className = "card";
-      note.innerHTML = `
-        <h2>“Hva gjelder dette egentlig?”</h2>
-        <div class="muted small">
-          Vi viser alltid <b>hva</b>, <b>hvor</b> og <b>til når</b> etter kjøp.
-          Mindre stress ved kontroll.
-        </div>
-      `;
-
-      wrap.appendChild(summary);
-      wrap.appendChild(recommended);
-      wrap.appendChild(note);
-
-      return wrap;
+      return el;
     }
 
-    function viewCheckout(){
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h2>Trygg utsjekk</h2>
-        <div class="muted small">Bekreft før betaling — færre feilkjøp.</div>
-
-        <div class="divider"></div>
-
-        <div class="row">
-          <div class="col">
-            <b>${state.ticket.name}</b>
-            <span class="muted small">${state.ticket.zones} · ${state.ticket.validFor}</span>
+    function viewCheckout() {
+      const el = document.createElement('div');
+      el.className = 'animate-in';
+      el.innerHTML = `
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="summary-title">Oppsummering</div>
+            <button class="summary-edit" id="editBtn">Endre</button>
           </div>
-          <div><b>${state.ticket.price} kr</b></div>
+          <div class="summary-route" style="margin-bottom: 12px;">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+            <div class="summary-route-text">
+              <strong>${esc(state.from)} → ${esc(state.to)}</strong>
+              <span>${esc(state.passenger)} · ${esc(state.time)}</span>
+            </div>
+          </div>
+          <div class="ticket-info">
+            <div class="info-item">
+              <div class="info-label">Billett</div>
+              <div class="info-value">${state.ticket.name}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Pris</div>
+              <div class="info-value">${state.ticket.price} kr</div>
+            </div>
+          </div>
+          <div class="checkout-section">
+            <div class="checkout-label">Velg betaling</div>
+            <div class="payment-options">
+              <div class="payment-option ${state.payment === 'Vipps' ? 'active' : ''}" data-pay="Vipps">
+                <span>Vipps</span>
+              </div>
+              <div class="payment-option ${state.payment === 'Kort' ? 'active' : ''}" data-pay="Kort">
+                <span>Kort</span>
+              </div>
+              <div class="payment-option ${state.payment === 'Apple Pay' ? 'active' : ''}" data-pay="Apple Pay">
+                <span>Apple Pay</span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="pill"><b>Dette kjøper du:</b> 1 billett for ${escapeHtml(state.passenger)}</div>
-        <div class="pill"><b>Gjelder for:</b> ${escapeHtml(state.from)} → ${escapeHtml(state.to)}</div>
-        <div class="pill"><b>Gyldig:</b> Starter ved kjøp · ${state.ticket.validFor}</div>
-
-        <div class="divider"></div>
-
-        <div class="input">
-          <label for="pay">Betalingsmåte</label>
-          <select id="pay">
-            <option ${state.payment==="Vipps"?"selected":""}>Vipps</option>
-            <option ${state.payment==="Kort"?"selected":""}>Kort</option>
-            <option ${state.payment==="Apple Pay"?"selected":""}>Apple Pay</option>
-          </select>
-        </div>
-
-        <div class="divider"></div>
-        <div class="muted small"><span class="mono">Sjekk:</span> Er dette riktig tur og reisende?</div>
       `;
 
-      card.querySelector("#pay").addEventListener("change", e => state.payment = e.target.value);
+      el.querySelector('#editBtn').onclick = () => {
+        state.view = 'suggestion';
+        render();
+      };
 
-      const meta = document.createElement("div");
-      meta.className = "card";
-      meta.innerHTML = `
-        <h2>Hvorfor denne siden hjelper</h2>
-        <ul class="muted small" style="margin:8px 0 0 18px; line-height:1.45">
-          <li>Færre feilkjøp (alt oppsummert)</li>
-          <li>Mindre tvil (hva–hvor–til når)</li>
-          <li>Bedre mestring for sporadiske</li>
-        </ul>
-      `;
+      el.querySelectorAll('.payment-option').forEach(opt => {
+        opt.onclick = () => {
+          state.payment = opt.dataset.pay;
+          el.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+          opt.classList.add('active');
+        };
+      });
 
-      const wrap = document.createElement("div");
-      wrap.appendChild(card);
-      wrap.appendChild(meta);
-      return wrap;
+      return el;
     }
 
-    function viewTicket(){
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="row">
-          <div class="col">
-            <div class="tag">Aktiv billett</div>
-            <h2 style="margin-top:10px">${state.ticket.name}</h2>
-            <div class="muted small">Aktivert: <span class="mono">${state.ticketActiveAt}</span></div>
+    function viewTicket() {
+      const el = document.createElement('div');
+      el.className = 'animate-in';
+      el.innerHTML = `
+        <div class="active-ticket">
+          <div class="active-badge">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
+            GYLDIG NÅ
           </div>
-          <div style="text-align:right">
-            <div class="pill" style="justify-content:flex-end"><b>${state.ticket.price} kr</b></div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="kpi">
-          <div class="box">
-            <b>Hva</b>
-            <span>${state.ticket.name}</span>
-          </div>
-          <div class="box">
-            <b>Hvor</b>
-            <span>${state.ticket.zones}</span>
-          </div>
-          <div class="box">
-            <b>Til når</b>
-            <span>${state.ticket.validFor}</span>
-          </div>
-          <div class="box">
-            <b>Status</b>
-            <span class="ok">Gyldig nå</span>
+          <div class="active-name">${state.ticket.name}</div>
+          <div class="active-time">Aktivert kl. ${state.activeAt}</div>
+          <div class="active-grid">
+            <div class="active-item">
+              <div class="active-item-label">Soner</div>
+              <div class="active-item-value">${state.ticket.zones}</div>
+            </div>
+            <div class="active-item">
+              <div class="active-item-label">Gyldig i</div>
+              <div class="active-item-value">${state.ticket.validFor}</div>
+            </div>
+            <div class="active-item">
+              <div class="active-item-label">Reisende</div>
+              <div class="active-item-value">${esc(state.passenger)}</div>
+            </div>
+            <div class="active-item">
+              <div class="active-item-label">Betalt</div>
+              <div class="active-item-value">${state.ticket.price} kr</div>
+            </div>
           </div>
         </div>
 
-        <div class="divider"></div>
-
-        <div class="pill"><b>Kontroll:</b> Vis denne skjermen ved behov.</div>
-        <div class="pill"><b>Trygghet:</b> Du har kjøpt riktig for turen.</div>
-      `;
-
-      const wrap = document.createElement("div");
-      wrap.appendChild(card);
-
-      const extra = document.createElement("div");
-      extra.className = "card";
-      extra.innerHTML = `
-        <h2>Testspørsmål (til brukertest)</h2>
-        <div class="muted small">Spør deltakeren etter fullføring:</div>
-        <div class="steps">
-          <span class="step">Hvor trygg er du (1–5)?</span>
-          <span class="step">Hva betyr “Hvor / Til når”?</span>
-          <span class="step">Hva var uklart?</span>
+        <div class="summary-card">
+          <div class="summary-route">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <div class="summary-route-text">
+              <strong>Gyldig for reisen</strong>
+              <span>${esc(state.from)} → ${esc(state.to)}</span>
+            </div>
+          </div>
         </div>
       `;
-      wrap.appendChild(extra);
-
-      return wrap;
+      return el;
     }
 
-    function wrapSection(title, subtitle, innerEl){
-      const outer = document.createElement("div");
-      const head = document.createElement("div");
-      head.className = "card";
-      head.innerHTML = `
-        <div class="row">
-          <div class="col">
-            <h2 style="margin:0">${title}</h2>
-            <div class="muted small">${subtitle}</div>
-          </div>
-          <span class="pill"><b>Mål:</b> mindre tvil</span>
-        </div>
-      `;
-      outer.appendChild(head);
-      outer.appendChild(innerEl);
-      return outer;
-    }
-
-    function escapeHtml(str){
+    function esc(str) {
       return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    // Buttons
-    $("resetBtn").onclick = () => {
-      state.view = "search";
-      state.ticket = null;
-      state.ticketActiveAt = null;
-      toast("Reset");
-      render();
-    };
+    $('menuBtn').onclick = () => toast('Meny kommer snart');
 
-    $("helpBtn").onclick = () => {
-      const msg = [
-        "Hjelp i prototypen:",
-        "1) Søk reise",
-        "2) Velg anbefalt/alternativ",
-        "3) Sjekk oppsummering",
-        "4) Se ‘Hva–Hvor–Til når’"
-      ].join("  •  ");
-      toast(msg);
-    };
-
-    // Init
-    // prototype ferdigg
     render();
   </script>
 </body>
 </html>
-
