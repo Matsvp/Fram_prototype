@@ -1,1075 +1,2265 @@
-<!doctype html>
-<html lang="no">
+<!DOCTYPE html>
+<html lang="nb">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FRAM – Enkel billettkjøp</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #F8F9FA;
-      --card: #FFFFFF;
-      --text: #1A1A1A;
-      --text-secondary: #6B7280;
-      --border: #E8EAED;
-      --primary: #00796B;
-      --primary-light: rgba(0,121,107,0.08);
-      --primary-dark: #005A4F;
-      --success: #00C853;
-      --warning: #FF9100;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-      --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
-      --radius-sm: 12px;
-      --radius-md: 16px;
-      --radius-lg: 24px;
-      --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: var(--font);
-      background: linear-gradient(180deg, #E0F2F1 0%, var(--bg) 30%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: var(--text);
-    }
-
-    /* Phone Container */
-    .phone {
-      width: 375px;
-      max-width: 100%;
-      background: var(--bg);
-      border-radius: 40px;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.15), inset 0 0 0 12px #1a1a1a;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .notch {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 28px;
-      background: #1a1a1a;
-      border-radius: 20px;
-      z-index: 100;
-    }
-
-    .screen {
-      background: var(--bg);
-      min-height: 720px;
-      padding-top: 52px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .header {
-      padding: 16px 20px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .header-btn {
-      width: 40px;
-      height: 40px;
-      border: none;
-      background: var(--card);
-      border-radius: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.15s ease;
-    }
-
-    .header-btn:active { transform: scale(0.95); }
-
-    .header-btn svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--text);
-    }
-
-    /* Content */
-    .content {
-      flex: 1;
-      padding: 0 16px 120px;
-      overflow-y: auto;
-    }
-
-    /* Search Card */
-    .search-card {
-      background: var(--card);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 12px;
-    }
-
-    .route-input {
-      display: flex;
-      gap: 12px;
-      align-items: stretch;
-    }
-
-    .route-dots {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 14px 0;
-      gap: 4px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--primary);
-    }
-
-    .dot-line {
-      width: 2px;
-      flex: 1;
-      background: var(--border);
-      min-height: 24px;
-    }
-
-    .dot.outline {
-      background: transparent;
-      border: 2px solid var(--primary);
-    }
-
-    .route-fields {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .field {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .field:hover, .field:focus-within {
-      border-color: var(--primary);
-      background: var(--primary-light);
-    }
-
-    .field-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
-
-    .field-value {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .field input {
-      border: none;
-      background: transparent;
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text);
-      width: 100%;
-      outline: none;
-      font-family: var(--font);
-    }
-
-    /* Options Row */
-    .options-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .option-chip {
-      flex: 1;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .option-chip:hover {
-      border-color: var(--primary);
-    }
-
-    .option-chip svg {
-      width: 18px;
-      height: 18px;
-      stroke: var(--text-secondary);
-    }
-
-    .option-chip span {
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    /* CTA Button */
-    .cta-btn {
-      width: 100%;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 16px;
-      transition: all 0.2s ease;
-      font-family: var(--font);
-    }
-
-    .cta-btn:hover { background: var(--primary-dark); }
-    .cta-btn:active { transform: scale(0.98); }
-    .cta-btn:disabled {
-      background: var(--border);
-      color: var(--text-secondary);
-      cursor: not-allowed;
-    }
-
-    /* Ticket Card */
-    .ticket-card {
-      background: var(--card);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 12px;
-    }
-
-    .ticket-header {
-      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
-      color: white;
-      padding: 16px 20px;
-    }
-
-    .ticket-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.2);
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .ticket-name {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .ticket-price {
-      font-size: 28px;
-      font-weight: 700;
-    }
-
-    .ticket-price span {
-      font-size: 16px;
-      font-weight: 500;
-      opacity: 0.8;
-    }
-
-    .ticket-body {
-      padding: 16px 20px;
-    }
-
-    .ticket-info {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .info-item {
-      flex: 1;
-      background: var(--bg);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-    }
-
-    .info-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
-    .info-value {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .ticket-reason {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 12px;
-      background: var(--primary-light);
-      border-radius: var(--radius-sm);
-      margin-bottom: 16px;
-    }
-
-    .ticket-reason svg {
-      width: 18px;
-      height: 18px;
-      stroke: var(--primary);
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .ticket-reason p {
-      font-size: 13px;
-      color: var(--text);
-      line-height: 1.4;
-    }
-
-    .ticket-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-secondary {
-      flex: 1;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: var(--font);
-    }
-
-    .btn-secondary:hover { background: var(--border); }
-
-    .btn-primary {
-      flex: 2;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: var(--font);
-    }
-
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-primary:active { transform: scale(0.98); }
-
-    /* Summary Card */
-    .summary-card {
-      background: var(--card);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 12px;
-    }
-
-    .summary-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .summary-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .summary-edit {
-      font-size: 14px;
-      color: var(--primary);
-      font-weight: 600;
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: var(--font);
-    }
-
-    .summary-route {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      background: var(--bg);
-      border-radius: var(--radius-sm);
-    }
-
-    .summary-route svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--primary);
-    }
-
-    .summary-route-text {
-      font-size: 14px;
-    }
-
-    .summary-route-text strong {
-      display: block;
-      font-weight: 600;
-    }
-
-    .summary-route-text span {
-      color: var(--text-secondary);
-      font-size: 13px;
-    }
-
-    /* Checkout */
-    .checkout-section {
-      margin-top: 16px;
-    }
-
-    .checkout-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    .payment-options {
-      display: flex;
-      gap: 8px;
-    }
-
-    .payment-option {
-      flex: 1;
-      background: var(--bg);
-      border: 2px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 14px 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .payment-option.active {
-      border-color: var(--primary);
-      background: var(--primary-light);
-    }
-
-    .payment-option span {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    /* Active Ticket */
-    .active-ticket {
-      background: linear-gradient(135deg, var(--primary) 0%, #26A69A 100%);
-      border-radius: var(--radius-lg);
-      padding: 24px 20px;
-      color: white;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .active-ticket::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -30%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-    }
-
-    .active-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--success);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    .active-badge svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .active-name {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .active-time {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 20px;
-    }
-
-    .active-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .active-item {
-      background: rgba(255,255,255,0.15);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-    }
-
-    .active-item-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      opacity: 0.8;
-      margin-bottom: 4px;
-    }
-
-    .active-item-value {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    /* Bottom Bar */
-    .bottom-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 16px 20px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .bottom-info {
-      flex: 1;
-    }
-
-    .bottom-title {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .bottom-sub {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .bottom-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 14px 24px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: var(--font);
-    }
-
-    .bottom-btn:hover { background: var(--primary-dark); }
-    .bottom-btn:active { transform: scale(0.98); }
-    .bottom-btn:disabled {
-      background: var(--border);
-      color: var(--text-secondary);
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      top: 60px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background: var(--text);
-      color: white;
-      padding: 12px 20px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: var(--shadow-lg);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      z-index: 1000;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-in {
-      animation: fadeIn 0.3s ease forwards;
-    }
-
-    /* Utility */
-    .hidden { display: none !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRAM — Prototype v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fram-blue: #0B3B5C;
+    --fram-blue-light: #1B5478;
+    --fram-blue-pale: #E8F0F5;
+    --accent: #F39200;
+    --accent-light: #FFF4E5;
+    --green: #1F8A3C;
+    --green-light: #E8F5EB;
+    --red: #D14242;
+    --bg: #FFFFFF;
+    --surface: #F7F8FA;
+    --text: #0E0E10;
+    --muted: #6B7280;
+    --line: #EAECEF;
+    --line-strong: #D1D5DB;
+    --shadow-sm: 0 2px 8px rgba(11,59,92,0.06);
+    --shadow-md: 0 4px 16px rgba(11,59,92,0.08);
+    --shadow-lg: 0 8px 32px rgba(11,59,92,0.12);
+    --radius-sm: 14px;
+    --radius-md: 20px;
+    --radius-lg: 26px;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  html, body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(145deg, #0B3B5C 0%, #1B5478 50%, #2D6A8A 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 844px;
+    max-height: 95vh;
+    background: var(--bg);
+    border-radius: 50px;
+    border: 12px solid #0a0a0a;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.4), inset 0 0 0 2px #2a2a2a;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 34px;
+    background: #0a0a0a;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+  
+  .statusbar {
+    background: var(--bg);
+    color: var(--text);
+    padding: 16px 28px 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 50;
+  }
+  
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+    animation: fadeIn 0.25s ease;
+  }
+  .screen.active { display: flex; }
+  
+  @keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(8px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.95); }
+  }
+
+  /* Top bar */
+  .topbar {
+    padding: 14px 24px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+  
+  .back {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--fram-blue);
+    cursor: pointer;
+    padding: 4px 8px 4px 0;
+    font-weight: 500;
+    transition: transform 0.15s;
+  }
+  .back:active { transform: translateX(-2px); }
+  
+  .topbar h1 {
+    font-size: 17px;
+    font-weight: 700;
+    flex: 1;
+    text-align: center;
+    letter-spacing: -0.3px;
+  }
+  .topbar .right { width: 32px; }
+
+  /* Content padding */
+  .content {
+    padding: 0 24px 100px;
+    flex: 1;
+  }
+
+  /* Typography */
+  .display {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.8px;
+    margin-bottom: 8px;
+  }
+  .lead {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: -0.3px;
+  }
+  .small { font-size: 13px; color: var(--muted); }
+
+  /* Buttons */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 18px 24px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  
+  .btn-primary {
+    background: var(--fram-blue);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(11,59,92,0.25);
+  }
+  .btn-primary:hover { box-shadow: 0 12px 32px rgba(11,59,92,0.3); }
+  
+  .btn-accent {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(243,146,0,0.3);
+  }
+  
+  .btn-ghost {
+    background: transparent;
+    color: var(--fram-blue);
+    font-weight: 600;
+  }
+  
+  .btn-outline {
+    background: #fff;
+    color: var(--text);
+    border: 2px solid var(--line);
+  }
+
+  /* ============ ONBOARDING ============ */
+  .onboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 28px 28px;
+  }
+  .onboard .skip {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 4px;
+  }
+  .onboard .ill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .ill-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--fram-blue-pale), #fff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    box-shadow: var(--shadow-lg);
+  }
+  .onboard h2 {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .onboard p {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 28px;
+  }
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line-strong);
+    transition: all 0.3s ease;
+  }
+  .dot.active {
+    background: var(--fram-blue);
+    width: 28px;
+    border-radius: 4px;
+  }
+
+  /* ============ HOME ============ */
+  .brand {
+    padding: 20px 24px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--fram-blue);
+    letter-spacing: -0.5px;
+  }
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .icon-btn:active { transform: scale(0.95); }
+
+  .home-hero {
+    padding: 12px 24px 20px;
+  }
+  .home-hero h2 {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  .home-hero p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .home-cards {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .home-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+  }
+  .home-card:active { transform: scale(0.98); }
+  .home-card.primary {
+    background: linear-gradient(135deg, var(--fram-blue) 0%, var(--fram-blue-light) 100%);
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+  .home-card .ico {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .home-card.primary .ico {
+    background: rgba(255,255,255,0.2);
+  }
+  .home-card .txt b {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .home-card .txt span {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .home-card.primary .txt span {
+    color: rgba(255,255,255,0.8);
+  }
+  .home-card .arrow {
+    margin-left: auto;
+    font-size: 20px;
+    opacity: 0.5;
+  }
+
+  /* ============ SEARCH ============ */
+  .search-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 8px 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-row:last-child { border-bottom: none; }
+  
+  .route-markers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0;
+  }
+  .marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .marker.from { background: var(--fram-blue); }
+  .marker.to {
+    background: #fff;
+    border: 3px solid var(--accent);
+  }
+  .marker-line {
+    width: 2px;
+    height: 20px;
+    background: var(--line-strong);
+  }
+  
+  .search-row .field { flex: 1; }
+  .search-row label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .search-row input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: inherit;
+  }
+  .search-row input::placeholder { color: var(--muted); }
+
+  /* Options chips */
+  .options-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .option-chip {
+    flex: 1;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .option-chip:hover, .option-chip.active {
+    border-color: var(--fram-blue);
+    background: var(--fram-blue-pale);
+  }
+  .option-chip .chip-icon {
+    font-size: 18px;
+  }
+  .option-chip span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ============ DEPARTURES ============ */
+  .departures-card {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .departures-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .departures-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .departures-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .see-all {
+    font-size: 13px;
+    color: var(--fram-blue);
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  .departure-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .departure-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .departure-item:hover {
+    background: var(--fram-blue-pale);
+  }
+  .departure-line {
+    width: 44px;
+    height: 44px;
+    background: var(--fram-blue);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+  }
+  .departure-info { flex: 1; }
+  .departure-destination {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .departure-stop {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .departure-time { text-align: right; }
+  .departure-minutes {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--fram-blue);
+  }
+  .departure-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 700;
+  }
+  .departure-live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  .departure-clock {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ============ MAP ============ */
+  .map-card {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .map-container {
+    height: 160px;
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .map-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .map-footer {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+  .map-legend {
+    display: flex;
+    gap: 18px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .legend-dot.you {
+    background: #4285F4;
+    box-shadow: 0 0 0 3px rgba(66,133,244,0.25);
+  }
+  .legend-dot.stop { background: var(--fram-blue); }
+  .map-expand {
+    font-size: 13px;
+    color: var(--fram-blue);
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  /* ============ RESULTS ============ */
+  .chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .chip {
+    padding: 10px 18px;
+    background: var(--surface);
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .chip:hover { background: var(--fram-blue-pale); }
+  .chip.active {
+    background: var(--fram-blue);
+    color: #fff;
+  }
+
+  .route {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .route:hover { border-color: var(--fram-blue-light); }
+  .route.recommended {
+    border: 2px solid var(--green);
+    background: var(--green-light);
+  }
+  .route .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--green);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 10px;
+  }
+  .route .top {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .route .from-time {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .route .arrow { color: var(--muted); font-size: 18px; }
+  .route .to-time {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .route .duration {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .route .legs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .leg.bus { background: var(--fram-blue); }
+  .leg.ferry { background: #2D7BBF; }
+  .leg.walk { background: #6B7280; }
+  .leg-arrow { color: var(--muted); font-size: 14px; }
+  .route .info {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  /* ============ PASSENGER ============ */
+  .pax-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .pax {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pax:hover { border-color: var(--fram-blue-light); }
+  .pax.selected {
+    border-color: var(--fram-blue);
+    background: var(--fram-blue-pale);
+  }
+  .pax .ico {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .pax .info { flex: 1; }
+  .pax .info b {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .pax .info span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .pax .help {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pax .check {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .pax.selected .check {
+    background: var(--fram-blue);
+    border-color: var(--fram-blue);
+    color: #fff;
+  }
+
+  /* ============ TICKET SUGGEST ============ */
+  .ticket-card {
+    background: linear-gradient(145deg, var(--fram-blue) 0%, var(--fram-blue-light) 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-lg);
+  }
+  .ticket-card .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .ticket-card h2 {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .ticket-card .price {
+    font-size: 42px;
+    font-weight: 800;
+    margin: 16px 0 6px;
+    letter-spacing: -1.5px;
+  }
+  .ticket-card .for {
+    font-size: 14px;
+    opacity: 0.85;
+    margin-bottom: 20px;
+  }
+  .ticket-card .why {
+    background: rgba(255,255,255,0.12);
+    padding: 16px 18px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .ticket-card .why b {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+  }
+
+  /* ============ PAYMENT ============ */
+  .pay {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pay:hover { border-color: var(--fram-blue-light); }
+  .pay.selected {
+    border-color: var(--fram-blue);
+    background: var(--fram-blue-pale);
+  }
+  .pay .pay-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .pay-logo.vipps { background: #FF5B24; }
+  .pay-logo.card { background: var(--fram-blue); font-size: 24px; }
+  .pay-logo.apple { background: #000; font-size: 24px; }
+  .pay .info { flex: 1; }
+  .pay .info b {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .pay .info span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .pay .check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .pay.selected .check {
+    background: var(--fram-blue);
+    border-color: var(--fram-blue);
+    color: #fff;
+  }
+
+  .order-summary {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .order-row.total {
+    border-top: 2px solid var(--line);
+    margin-top: 10px;
+    padding-top: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ============ ACTIVE TICKET ============ */
+  .active-ticket {
+    margin: 0 24px;
+    background: linear-gradient(145deg, var(--fram-blue) 0%, var(--fram-blue-light) 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  .active-ticket::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 180px;
+    height: 180px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .active-ticket .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .active-ticket .top b {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.75;
+    margin-bottom: 4px;
+  }
+  .active-ticket .top h3 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .active-ticket .qr {
+    width: 100px;
+    height: 100px;
+    background: #fff;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+  .active-ticket .valid {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 16px;
+  }
+
+  .live-status {
+    background: var(--green-light);
+    border: 2px solid var(--green);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    margin: 0 24px 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .live-status .ico {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .live-status .info b {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 3px;
+  }
+  .live-status .info span {
+    font-size: 14px;
+    color: #1a4528;
+    line-height: 1.45;
+  }
+
+  .stops-list {
+    margin: 0 24px 16px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 20px;
+  }
+  .stops-list h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 16px;
+  }
+  .stop {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    position: relative;
+  }
+  .stop::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 28px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--line-strong);
+  }
+  .stop:last-child::before { display: none; }
+  .stop .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--line-strong);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .stop.passed .dot {
+    background: var(--line-strong);
+    border-color: var(--line-strong);
+  }
+  .stop.current .dot {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 0 5px rgba(31,138,60,0.2);
+  }
+  .stop.target .dot {
+    background: #fff;
+    border: 3px solid var(--accent);
+  }
+  .stop .info {
+    flex: 1;
+    font-size: 15px;
+  }
+  .stop .info b { font-weight: 600; }
+  .stop.passed .info { color: var(--muted); }
+  .stop.current .info b { color: var(--green); font-weight: 700; }
+  .stop.target .info b { color: var(--accent); font-weight: 700; }
+  .stop .time {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .help-bar {
+    margin: 0 24px 24px;
+  }
+  .help-bar .btn {
+    background: #fff;
+    color: var(--red);
+    border: 2px solid var(--red);
+    font-weight: 600;
+  }
+
+  /* ============ WRONG BUS ============ */
+  .reassure {
+    background: var(--green-light);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .reassure .big {
+    font-size: 52px;
+    margin-bottom: 12px;
+  }
+  .reassure h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .reassure p {
+    font-size: 15px;
+    color: #1a4528;
+    line-height: 1.55;
+  }
+  .help-step {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .help-step .num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--fram-blue);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 12px;
+    vertical-align: middle;
+  }
+  .help-step b {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .help-step p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 8px;
+    margin-left: 42px;
+    line-height: 1.5;
+  }
+
+  /* ============ CONFIRM ============ */
+  .confirm-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 28px 28px;
+    text-align: center;
+  }
+  .confirm-screen .check-big {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    margin: 30px auto 24px;
+    box-shadow: 0 12px 32px rgba(31,138,60,0.3);
+  }
+  .confirm-screen h2 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .confirm-screen > p {
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .confirm-screen .receipt {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin: 28px 0;
+    text-align: left;
+  }
+
+  /* Recent items */
+  .recent { margin-top: 24px; }
+  .recent-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 12px;
+  }
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .recent-item:last-child { border-bottom: none; }
+  .recent-item .pin {
+    width: 42px;
+    height: 42px;
+    background: var(--surface);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .recent-item .info b {
+    font-size: 15px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .recent-item .info span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Bottom nav */
+  .nav {
+    border-top: 1px solid var(--line);
+    background: #fff;
+    padding: 12px 0 16px;
+    display: flex;
+    justify-content: space-around;
+    flex-shrink: 0;
+  }
+  .nav button {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s;
+  }
+  .nav button.active { color: var(--fram-blue); }
+  .nav .ico { font-size: 24px; }
+
+  /* ============ MODAL ============ */
+  .modal-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    width: 100%;
+    background: #fff;
+    border-radius: 28px 28px 0 0;
+    padding: 24px 28px 32px;
+    animation: slideUp 0.3s ease;
+  }
+  .modal .grip {
+    width: 42px;
+    height: 5px;
+    background: var(--line-strong);
+    border-radius: 3px;
+    margin: 0 auto 20px;
+  }
+  .modal h3 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .modal p {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .modal .btn { margin-top: 4px; }
+
+  /* Toast */
+  .toast {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--text);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 200;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
 </head>
 <body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span>9:41</span>
+    <span>●●●●</span>
+  </div>
+
   <div class="toast" id="toast"></div>
 
-  <div class="phone">
-    <div class="notch"></div>
-    <div class="screen">
-      <div class="header">
-        <div class="logo-group">
-          <div class="logo">F</div>
-          <span class="logo-text">FRAM</span>
+  <!-- ============ ONBOARDING 1 ============ -->
+  <div class="screen active" id="onb1">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🧭</div></div>
+      <h2>Velkommen til FRAM</h2>
+      <p>Den enkleste måten å reise med buss, ferje og hurtigbåt i Møre og Romsdal. Vi tar oss av det vanskelige.</p>
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('onb2')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ ONBOARDING 2 ============ -->
+  <div class="screen" id="onb2">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🎫</div></div>
+      <h2>Vi velger billetten</h2>
+      <p>Du trenger ikke vite hva en sone er, eller hvor lenge billetten varer. Vi finner riktig billett til deg.</p>
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('onb3')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ ONBOARDING 3 ============ -->
+  <div class="screen" id="onb3">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🛎️</div></div>
+      <h2>Vi følger med under reisen</h2>
+      <p>Du får beskjed når du er på riktig buss, og varsel når du nærmer deg stoppet ditt. Du kan legge fra deg telefonen.</p>
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('home')">Kom i gang</button>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="screen" id="home">
+    <div class="brand">
+      <div class="logo">FRAM</div>
+      <button class="icon-btn" onclick="openModal('help-modal')">?</button>
+    </div>
+    <div class="home-hero">
+      <h2>Hvor skal du<br>i dag?</h2>
+      <p>Velg hvordan du vil reise</p>
+    </div>
+    <div class="home-cards">
+      <button class="home-card primary" onclick="go('search')">
+        <div class="ico">🔍</div>
+        <div class="txt">
+          <b>Finn reise</b>
+          <span>Søk og kjøp billett</span>
         </div>
-        <button class="header-btn" id="menuBtn">
-          <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
+        <div class="arrow">→</div>
+      </button>
+    </div>
+
+    <div class="content" style="margin-top: 20px;">
+      <div class="recent-title">Tidligere reiser</div>
+      <div class="recent-item" onclick="go('results')">
+        <div class="pin">📍</div>
+        <div class="info">
+          <b>Ålesund → Moa</b>
+          <span>Sist brukt i går</span>
+        </div>
+      </div>
+      <div class="recent-item" onclick="go('results-long')">
+        <div class="pin">⛴️</div>
+        <div class="info">
+          <b>Ålesund → Molde</b>
+          <span>Med ferje, sist brukt forrige uke</span>
+        </div>
       </div>
 
-      <div class="content" id="viewRoot"></div>
-
-      <div class="bottom-bar" id="bottomBar">
-        <div class="bottom-info">
-          <div class="bottom-title" id="bbTitle">Velg reise</div>
-          <div class="bottom-sub" id="bbSub">Fyll inn fra og til</div>
+      <!-- Map -->
+      <div class="map-card" style="margin-top: 20px;">
+        <div class="map-container">
+          <svg class="map-svg" viewBox="0 0 375 160" preserveAspectRatio="xMidYMid slice">
+            <!-- Background -->
+            <rect width="375" height="160" fill="#E3F2FD"/>
+            
+            <!-- Water/fjord -->
+            <path d="M0 90 Q 60 75, 120 95 Q 200 115, 280 100 Q 340 85, 375 95 L375 160 L0 160 Z" fill="#90CAF9" opacity="0.6"/>
+            <path d="M0 120 Q 100 105, 180 125 Q 280 145, 375 130 L375 160 L0 160 Z" fill="#64B5F6" opacity="0.4"/>
+            
+            <!-- Roads -->
+            <path d="M0 60 Q 80 50, 160 65 Q 240 80, 320 70 L375 75" stroke="#CFD8DC" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M80 0 Q 90 30, 100 55" stroke="#CFD8DC" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M280 70 Q 290 90, 300 120" stroke="#CFD8DC" stroke-width="4" fill="none" stroke-linecap="round"/>
+            
+            <!-- Bus stops -->
+            <circle cx="100" cy="55" r="8" fill="#0B3B5C"/>
+            <circle cx="100" cy="55" r="4" fill="white"/>
+            
+            <circle cx="200" cy="68" r="8" fill="#0B3B5C"/>
+            <circle cx="200" cy="68" r="4" fill="white"/>
+            
+            <circle cx="300" cy="72" r="8" fill="#0B3B5C"/>
+            <circle cx="300" cy="72" r="4" fill="white"/>
+            
+            <!-- Your location -->
+            <circle cx="120" cy="62" r="14" fill="#4285F4" opacity="0.2"/>
+            <circle cx="120" cy="62" r="8" fill="#4285F4"/>
+            <circle cx="120" cy="62" r="4" fill="white"/>
+            
+            <!-- Labels -->
+            <text x="100" y="42" font-family="DM Sans" font-size="9" font-weight="700" fill="#0B3B5C" text-anchor="middle">Sentrum</text>
+            <text x="200" y="55" font-family="DM Sans" font-size="9" font-weight="700" fill="#0B3B5C" text-anchor="middle">Moa</text>
+            <text x="300" y="59" font-family="DM Sans" font-size="9" font-weight="700" fill="#0B3B5C" text-anchor="middle">Åse</text>
+          </svg>
         </div>
-        <button class="bottom-btn" id="bbBtn" disabled>Søk</button>
+        <div class="map-footer">
+          <div class="map-legend">
+            <div class="legend-item">
+              <div class="legend-dot you"></div>
+              <span>Du</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot stop"></div>
+              <span>Busstopp</span>
+            </div>
+          </div>
+          <button class="map-expand" onclick="toast('Åpner fullskjermkart...')">Åpne kart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="active"><div class="ico">🏠</div>Hjem</button>
+      <button onclick="go('search')"><div class="ico">🔍</div>Søk</button>
+      <button onclick="go('ticket-active')"><div class="ico">🎫</div>Billett</button>
+      <button onclick="openModal('help-modal')"><div class="ico">❓</div>Hjelp</button>
+    </div>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <div class="screen" id="search">
+    <div class="topbar">
+      <button class="back" onclick="go('home')">←</button>
+      <h1>Søk reise</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="search-card">
+        <div class="search-row">
+          <div class="route-markers">
+            <div class="marker from"></div>
+            <div class="marker-line"></div>
+            <div class="marker to"></div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+            <div class="field">
+              <label>Fra</label>
+              <input type="text" value="Min posisjon" id="fromInput">
+            </div>
+            <div class="field">
+              <label>Til</label>
+              <input type="text" placeholder="Hvor skal du?" value="Moa" id="toInput">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('results')" style="margin-bottom: 20px;">Søk reise</button>
+
+      <!-- Departures -->
+      <div class="departures-card" style="margin-top: 20px;">
+        <div class="departures-header">
+          <div>
+            <div class="departures-title">Neste avganger</div>
+            <div class="departures-subtitle">Fra din posisjon</div>
+          </div>
+          <button class="see-all">Se alle</button>
+        </div>
+        <div class="departure-list">
+          <div class="departure-item" onclick="go('results')">
+            <div class="departure-line">625</div>
+            <div class="departure-info">
+              <div class="departure-destination">Moa</div>
+              <div class="departure-stop">Keiser Wilhelms gate</div>
+            </div>
+            <div class="departure-time">
+              <div class="departure-minutes">4 min</div>
+              <div class="departure-live">Sanntid</div>
+            </div>
+          </div>
+          <div class="departure-item" onclick="go('results')">
+            <div class="departure-line">24</div>
+            <div class="departure-info">
+              <div class="departure-destination">Sentrum</div>
+              <div class="departure-stop">Keiser Wilhelms gate</div>
+            </div>
+            <div class="departure-time">
+              <div class="departure-minutes">8 min</div>
+              <div class="departure-live">Sanntid</div>
+            </div>
+          </div>
+          <div class="departure-item" onclick="go('results-long')">
+            <div class="departure-line">681</div>
+            <div class="departure-info">
+              <div class="departure-destination">Molde</div>
+              <div class="departure-stop">Ålesund rutebilstasjon</div>
+            </div>
+            <div class="departure-time">
+              <div class="departure-minutes">22 min</div>
+              <div class="departure-clock">10:15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="map-card">
+        <div class="map-container">
+          <svg class="map-svg" viewBox="0 0 375 160" preserveAspectRatio="xMidYMid slice">
+            <!-- Background -->
+            <rect width="375" height="160" fill="#E3F2FD"/>
+            
+            <!-- Water -->
+            <path d="M0 100 Q 80 85, 160 105 Q 240 125, 375 110 L375 160 L0 160 Z" fill="#90CAF9" opacity="0.5"/>
+            
+            <!-- Roads -->
+            <path d="M0 70 Q 100 60, 200 75 Q 300 90, 375 80" stroke="#CFD8DC" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <path d="M100 0 Q 110 40, 130 70" stroke="#CFD8DC" stroke-width="5" fill="none" stroke-linecap="round"/>
+            
+            <!-- Bus route -->
+            <path d="M80 65 Q 150 55, 220 70 Q 290 85, 340 75" stroke="#0B3B5C" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="8 5" opacity="0.5"/>
+            
+            <!-- Bus stops -->
+            <circle cx="80" cy="65" r="10" fill="#0B3B5C"/>
+            <circle cx="80" cy="65" r="5" fill="white"/>
+            <text x="80" y="50" font-family="DM Sans" font-size="9" font-weight="700" fill="#0B3B5C" text-anchor="middle">Start</text>
+            
+            <circle cx="220" cy="70" r="8" fill="#0B3B5C"/>
+            <circle cx="220" cy="70" r="4" fill="white"/>
+            
+            <circle cx="340" cy="75" r="10" fill="#F39200"/>
+            <circle cx="340" cy="75" r="5" fill="white"/>
+            <text x="340" y="60" font-family="DM Sans" font-size="9" font-weight="700" fill="#F39200" text-anchor="middle">Moa</text>
+            
+            <!-- Your location -->
+            <circle cx="95" cy="78" r="12" fill="#4285F4" opacity="0.2"/>
+            <circle cx="95" cy="78" r="7" fill="#4285F4"/>
+            <circle cx="95" cy="78" r="3" fill="white"/>
+          </svg>
+        </div>
+        <div class="map-footer">
+          <div class="map-legend">
+            <div class="legend-item">
+              <div class="legend-dot you"></div>
+              <span>Du</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot stop"></div>
+              <span>Busstopp</span>
+            </div>
+          </div>
+          <button class="map-expand" onclick="toast('Åpner fullskjermkart...')">Åpne kart</button>
+        </div>
+      </div>
+
+      <div class="recent">
+        <div class="recent-title">Forslag</div>
+        <div class="recent-item" onclick="go('results')">
+          <div class="pin">📍</div>
+          <div class="info">
+            <b>Moa</b>
+            <span>Kjøpesenter, Ålesund</span>
+          </div>
+        </div>
+        <div class="recent-item" onclick="go('results-long')">
+          <div class="pin">📍</div>
+          <div class="info">
+            <b>Molde sentrum</b>
+            <span>1 t 35 min med ferje</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const $ = id => document.getElementById(id);
+  <!-- ============ RESULTS - SHORT ============ -->
+  <div class="screen" id="results">
+    <div class="topbar">
+      <button class="back" onclick="go('search')">←</button>
+      <h1>Min posisjon → Moa</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="chips">
+        <div class="chip active">Nå</div>
+        <div class="chip">Senere i dag</div>
+        <div class="chip">I morgen</div>
+      </div>
 
-    const state = {
-      view: 'search',
-      from: 'Molde trafikkterminal',
-      to: 'Ålesund sentrum',
-      time: 'Nå',
-      passenger: 'Voksen',
-      ticket: null,
-      payment: 'Vipps',
-      activeAt: null
-    };
-
-    const tickets = [
-      {
-        id: 'single',
-        name: 'Enkeltbillett',
-        price: 44,
-        zones: 'Sone A–B',
-        validFor: '60 min',
-        why: 'Dekker hele reisen din fra Molde til Ålesund.',
-        tag: 'Anbefalt'
-      },
-      {
-        id: 'day',
-        name: '24-timersbillett',
-        price: 119,
-        zones: 'Sone A–B',
-        validFor: '24 timer',
-        why: 'Lønner seg ved 3+ reiser samme dag.',
-        tag: 'Alternativ'
-      }
-    ];
-
-    function toast(msg) {
-      const t = $('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    function formatTime() {
-      const d = new Date();
-      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    }
-
-    function updateBottom(title, sub, btnText, enabled, onClick) {
-      $('bbTitle').textContent = title;
-      $('bbSub').textContent = sub;
-      const btn = $('bbBtn');
-      btn.textContent = btnText;
-      btn.disabled = !enabled;
-      btn.onclick = onClick;
-    }
-
-    function render() {
-      const root = $('viewRoot');
-      root.innerHTML = '';
-
-      if (state.view === 'search') {
-        root.appendChild(viewSearch());
-        updateBottom('Klar til søk', `${state.from} → ${state.to}`, 'Finn billett', true, () => {
-          state.ticket = tickets[0];
-          state.view = 'suggestion';
-          render();
-        });
-      }
-
-      if (state.view === 'suggestion') {
-        root.appendChild(viewSuggestion());
-        updateBottom(
-          state.ticket ? `${state.ticket.name}` : 'Velg billett',
-          state.ticket ? `${state.ticket.price} kr · ${state.ticket.validFor}` : '',
-          'Gå til betaling',
-          !!state.ticket,
-          () => { state.view = 'checkout'; render(); }
-        );
-      }
-
-      if (state.view === 'checkout') {
-        root.appendChild(viewCheckout());
-        updateBottom(
-          `Total: ${state.ticket.price} kr`,
-          `Betaling med ${state.payment}`,
-          'Betal nå',
-          true,
-          () => {
-            state.activeAt = formatTime();
-            state.view = 'ticket';
-            toast('Billett kjøpt!');
-            render();
-          }
-        );
-      }
-
-      if (state.view === 'ticket') {
-        root.appendChild(viewTicket());
-        updateBottom('Billett aktiv', 'Vis ved kontroll', 'Ny reise', true, () => {
-          state.view = 'search';
-          state.ticket = null;
-          state.activeAt = null;
-          render();
-        });
-      }
-    }
-
-    function viewSearch() {
-      const el = document.createElement('div');
-      el.className = 'animate-in';
-      el.innerHTML = `
-        <div class="search-card">
-          <div class="route-input">
-            <div class="route-dots">
-              <div class="dot"></div>
-              <div class="dot-line"></div>
-              <div class="dot outline"></div>
-            </div>
-            <div class="route-fields">
-              <div class="field">
-                <div class="field-label">Fra</div>
-                <input type="text" id="fromInput" value="${esc(state.from)}" />
-              </div>
-              <div class="field">
-                <div class="field-label">Til</div>
-                <input type="text" id="toInput" value="${esc(state.to)}" />
-              </div>
-            </div>
-          </div>
-
-          <div class="options-row">
-            <div class="option-chip" id="timeChip">
-              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-              <span id="timeLabel">${esc(state.time)}</span>
-            </div>
-            <div class="option-chip" id="passengerChip">
-              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-              </svg>
-              <span id="passengerLabel">${esc(state.passenger)}</span>
-            </div>
-          </div>
+      <div class="route recommended" onclick="go('passenger')">
+        <span class="badge">✓ Anbefalt</span>
+        <div class="top">
+          <span class="from-time">09:52</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:14</span>
+          <span class="duration">22 min</span>
         </div>
-      `;
-
-      el.querySelector('#fromInput').addEventListener('input', e => { state.from = e.target.value; });
-      el.querySelector('#toInput').addEventListener('input', e => { state.to = e.target.value; });
-
-      el.querySelector('#timeChip').onclick = () => {
-        const opts = ['Nå', 'Senere i dag', 'I morgen'];
-        const idx = opts.indexOf(state.time);
-        state.time = opts[(idx + 1) % opts.length];
-        el.querySelector('#timeLabel').textContent = state.time;
-      };
-
-      el.querySelector('#passengerChip').onclick = () => {
-        const opts = ['Voksen', 'Student', 'Barn'];
-        const idx = opts.indexOf(state.passenger);
-        state.passenger = opts[(idx + 1) % opts.length];
-        el.querySelector('#passengerLabel').textContent = state.passenger;
-      };
-
-      return el;
-    }
-
-    function viewSuggestion() {
-      const el = document.createElement('div');
-      el.className = 'animate-in';
-
-      const rec = tickets[0];
-      const alt = tickets[1];
-
-      el.innerHTML = `
-        <div class="summary-card">
-          <div class="summary-route">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            <div class="summary-route-text">
-              <strong>${esc(state.from)} → ${esc(state.to)}</strong>
-              <span>${esc(state.time)} · ${esc(state.passenger)}</span>
-            </div>
-          </div>
+        <div class="legs">
+          <span class="leg walk">🚶 2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 625</span>
         </div>
+        <div class="info">Direkte. Gå 2 min til Keiser Wilhelms gate.</div>
+      </div>
 
-        <div class="ticket-card" id="recCard">
-          <div class="ticket-header">
-            <div class="ticket-badge">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-              ${rec.tag}
-            </div>
-            <div class="ticket-name">${rec.name}</div>
-            <div class="ticket-price">${rec.price} <span>kr</span></div>
-          </div>
-          <div class="ticket-body">
-            <div class="ticket-info">
-              <div class="info-item">
-                <div class="info-label">Soner</div>
-                <div class="info-value">${rec.zones}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Gyldig</div>
-                <div class="info-value">${rec.validFor}</div>
-              </div>
-            </div>
-            <div class="ticket-reason">
-              <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-              </svg>
-              <p>${rec.why}</p>
-            </div>
-            <div class="ticket-actions">
-              <button class="btn-secondary" id="altBtn">Se alternativ</button>
-              <button class="btn-primary" id="selectBtn">Velg denne</button>
-            </div>
-          </div>
+      <div class="route" onclick="go('passenger')">
+        <div class="top">
+          <span class="from-time">10:07</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:31</span>
+          <span class="duration">24 min</span>
         </div>
-      `;
-
-      el.querySelector('#selectBtn').onclick = () => {
-        state.ticket = rec;
-        toast('Billett valgt');
-        render();
-      };
-
-      el.querySelector('#altBtn').onclick = () => {
-        state.ticket = alt;
-        toast('Alternativ valgt');
-        render();
-      };
-
-      return el;
-    }
-
-    function viewCheckout() {
-      const el = document.createElement('div');
-      el.className = 'animate-in';
-      el.innerHTML = `
-        <div class="summary-card">
-          <div class="summary-header">
-            <div class="summary-title">Oppsummering</div>
-            <button class="summary-edit" id="editBtn">Endre</button>
-          </div>
-          <div class="summary-route" style="margin-bottom: 12px;">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            <div class="summary-route-text">
-              <strong>${esc(state.from)} → ${esc(state.to)}</strong>
-              <span>${esc(state.passenger)} · ${esc(state.time)}</span>
-            </div>
-          </div>
-          <div class="ticket-info">
-            <div class="info-item">
-              <div class="info-label">Billett</div>
-              <div class="info-value">${state.ticket.name}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Pris</div>
-              <div class="info-value">${state.ticket.price} kr</div>
-            </div>
-          </div>
-          <div class="checkout-section">
-            <div class="checkout-label">Velg betaling</div>
-            <div class="payment-options">
-              <div class="payment-option ${state.payment === 'Vipps' ? 'active' : ''}" data-pay="Vipps">
-                <span>Vipps</span>
-              </div>
-              <div class="payment-option ${state.payment === 'Kort' ? 'active' : ''}" data-pay="Kort">
-                <span>Kort</span>
-              </div>
-              <div class="payment-option ${state.payment === 'Apple Pay' ? 'active' : ''}" data-pay="Apple Pay">
-                <span>Apple Pay</span>
-              </div>
-            </div>
-          </div>
+        <div class="legs">
+          <span class="leg walk">🚶 2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 24</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 11</span>
         </div>
-      `;
+        <div class="info">1 bytte på Sentrum.</div>
+      </div>
 
-      el.querySelector('#editBtn').onclick = () => {
-        state.view = 'suggestion';
-        render();
-      };
-
-      el.querySelectorAll('.payment-option').forEach(opt => {
-        opt.onclick = () => {
-          state.payment = opt.dataset.pay;
-          el.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
-          opt.classList.add('active');
-        };
-      });
-
-      return el;
-    }
-
-    function viewTicket() {
-      const el = document.createElement('div');
-      el.className = 'animate-in';
-      el.innerHTML = `
-        <div class="active-ticket">
-          <div class="active-badge">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-            </svg>
-            GYLDIG NÅ
-          </div>
-          <div class="active-name">${state.ticket.name}</div>
-          <div class="active-time">Aktivert kl. ${state.activeAt}</div>
-          <div class="active-grid">
-            <div class="active-item">
-              <div class="active-item-label">Soner</div>
-              <div class="active-item-value">${state.ticket.zones}</div>
-            </div>
-            <div class="active-item">
-              <div class="active-item-label">Gyldig i</div>
-              <div class="active-item-value">${state.ticket.validFor}</div>
-            </div>
-            <div class="active-item">
-              <div class="active-item-label">Reisende</div>
-              <div class="active-item-value">${esc(state.passenger)}</div>
-            </div>
-            <div class="active-item">
-              <div class="active-item-label">Betalt</div>
-              <div class="active-item-value">${state.ticket.price} kr</div>
-            </div>
-          </div>
+      <div class="route" onclick="go('passenger')">
+        <div class="top">
+          <span class="from-time">10:22</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:44</span>
+          <span class="duration">22 min</span>
         </div>
-
-        <div class="summary-card">
-          <div class="summary-route">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            <div class="summary-route-text">
-              <strong>Gyldig for reisen</strong>
-              <span>${esc(state.from)} → ${esc(state.to)}</span>
-            </div>
-          </div>
+        <div class="legs">
+          <span class="leg walk">🚶 2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 625</span>
         </div>
-      `;
-      return el;
+        <div class="info">Direkte.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS - LONG (with ferry) ============ -->
+  <div class="screen" id="results-long">
+    <div class="topbar">
+      <button class="back" onclick="go('search')">←</button>
+      <h1>Ålesund → Molde</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="chips">
+        <div class="chip active">Nå</div>
+        <div class="chip">Senere i dag</div>
+        <div class="chip">I morgen</div>
+      </div>
+
+      <div class="route recommended" onclick="go('passenger-long')">
+        <span class="badge">✓ Anbefalt</span>
+        <div class="top">
+          <span class="from-time">10:15</span>
+          <span class="arrow">→</span>
+          <span class="to-time">11:50</span>
+          <span class="duration">1 t 35 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg bus">🚌 681</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg ferry">⛴️ Ferje</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 200</span>
+        </div>
+        <div class="info">Hele turen er én billett. Du trenger ikke kjøpe ny ved bytte.</div>
+      </div>
+
+      <div class="route" onclick="go('passenger-long')">
+        <div class="top">
+          <span class="from-time">11:15</span>
+          <span class="arrow">→</span>
+          <span class="to-time">12:55</span>
+          <span class="duration">1 t 40 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg bus">🚌 681</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg ferry">⛴️ Ferje</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">🚌 200</span>
+        </div>
+        <div class="info">Hele turen er én billett.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PASSENGER TYPE - SHORT ============ -->
+  <div class="screen" id="passenger">
+    <div class="topbar">
+      <button class="back" onclick="go('results')">←</button>
+      <h1>Hvem reiser?</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg passasjertype. Trykk på spørsmålstegnet hvis du er usikker.</p>
+      <div class="pax-list">
+        <div class="pax selected" onclick="selectPax(this)">
+          <div class="ico">🧑</div>
+          <div class="info">
+            <b>Voksen</b>
+            <span>16-66 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('voksen')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">👴</div>
+          <div class="info">
+            <b>Honnør</b>
+            <span>67 år og over</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('honnor')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🧒</div>
+          <div class="info">
+            <b>Barn</b>
+            <span>6-15 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('barn')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🎓</div>
+          <div class="info">
+            <b>Student</b>
+            <span>Krever gyldig studentbevis</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('student')">?</button>
+          <div class="check">✓</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-suggest')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ PASSENGER TYPE - LONG ============ -->
+  <div class="screen" id="passenger-long">
+    <div class="topbar">
+      <button class="back" onclick="go('results-long')">←</button>
+      <h1>Hvem reiser?</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg passasjertype. Trykk på spørsmålstegnet hvis du er usikker.</p>
+      <div class="pax-list">
+        <div class="pax selected" onclick="selectPax(this)">
+          <div class="ico">🧑</div>
+          <div class="info">
+            <b>Voksen</b>
+            <span>16-66 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('voksen')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">👴</div>
+          <div class="info">
+            <b>Honnør</b>
+            <span>67 år og over</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('honnor')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🧒</div>
+          <div class="info">
+            <b>Barn</b>
+            <span>6-15 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('barn')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🎓</div>
+          <div class="info">
+            <b>Student</b>
+            <span>Krever gyldig studentbevis</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('student')">?</button>
+          <div class="check">✓</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-suggest-long')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ TICKET SUGGEST - SHORT ============ -->
+  <div class="screen" id="ticket-suggest">
+    <div class="topbar">
+      <button class="back" onclick="go('passenger')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="ticket-card">
+        <div class="label">✓ Vi har valgt for deg</div>
+        <h2>Enkeltbillett, voksen</h2>
+        <div class="price">42 kr</div>
+        <div class="for">Innenfor Ålesund</div>
+        <div class="why">
+          <b>Hvorfor denne?</b>
+          Reisen din er innenfor Ålesund. Billetten varer i 90 minutter, så du kan bytte buss gratis underveis.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('payment')">Kjøp for 42 kr</button>
+      <button class="btn btn-ghost" onclick="openTermModal('alternativer')" style="margin-top: 10px;">Se andre billettyper</button>
+    </div>
+  </div>
+
+  <!-- ============ TICKET SUGGEST - LONG ============ -->
+  <div class="screen" id="ticket-suggest-long">
+    <div class="topbar">
+      <button class="back" onclick="go('passenger-long')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="ticket-card">
+        <div class="label">✓ Vi har valgt for deg</div>
+        <h2>Enkeltbillett, voksen</h2>
+        <div class="price">189 kr</div>
+        <div class="for">Mellom Ålesund og Molde</div>
+        <div class="why">
+          <b>Hvorfor denne?</b>
+          Hele turen er inkludert. Du trenger ikke kjøpe ny billett når du bytter til ferje eller buss underveis.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('payment-long')">Kjøp for 189 kr</button>
+      <button class="btn btn-ghost" onclick="openTermModal('alternativer')" style="margin-top: 10px;">Se andre billettyper</button>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENT ============ -->
+  <div class="screen" id="payment">
+    <div class="topbar">
+      <button class="back" onclick="go('ticket-suggest')">←</button>
+      <h1>Betal</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg betalingsmåte</p>
+      <div class="pay selected" onclick="selectPay(this)">
+        <div class="pay-logo vipps">vipps</div>
+        <div class="info">
+          <b>Vipps</b>
+          <span>Bekreft med fingeravtrykk</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="pay-logo card">💳</div>
+        <div class="info">
+          <b>Bankkort</b>
+          <span>Visa •••• 4821</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="pay-logo apple"></div>
+        <div class="info">
+          <b>Apple Pay</b>
+          <span>Bekreft med Face ID</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+
+      <div class="order-summary">
+        <div class="order-row"><span>Enkeltbillett, voksen</span><span>42 kr</span></div>
+        <div class="order-row"><span>Innenfor Ålesund</span><span></span></div>
+        <div class="order-row total"><span>Å betale</span><span>42 kr</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('confirm')">Betal 42 kr</button>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENT LONG ============ -->
+  <div class="screen" id="payment-long">
+    <div class="topbar">
+      <button class="back" onclick="go('ticket-suggest-long')">←</button>
+      <h1>Betal</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg betalingsmåte</p>
+      <div class="pay selected" onclick="selectPay(this)">
+        <div class="pay-logo vipps">vipps</div>
+        <div class="info">
+          <b>Vipps</b>
+          <span>Bekreft med fingeravtrykk</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="pay-logo card">💳</div>
+        <div class="info">
+          <b>Bankkort</b>
+          <span>Visa •••• 4821</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="pay-logo apple"></div>
+        <div class="info">
+          <b>Apple Pay</b>
+          <span>Bekreft med Face ID</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+
+      <div class="order-summary">
+        <div class="order-row"><span>Enkeltbillett, voksen</span><span>189 kr</span></div>
+        <div class="order-row"><span>Ålesund → Molde</span><span></span></div>
+        <div class="order-row total"><span>Å betale</span><span>189 kr</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('confirm')">Betal 189 kr</button>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM ============ -->
+  <div class="screen" id="confirm">
+    <div class="confirm-screen">
+      <div class="check-big">✓</div>
+      <h2>Billetten er klar!</h2>
+      <p>Du er klar til å reise</p>
+      <div class="receipt">
+        <div class="order-row"><span>Enkeltbillett, voksen</span><span>42 kr</span></div>
+        <div class="order-row"><span>Betalt med Vipps</span><span></span></div>
+        <div class="order-row total"><span>Totalt</span><span>42 kr</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-active')">Se billetten min</button>
+    </div>
+  </div>
+
+  <!-- ============ ACTIVE TICKET ============ -->
+  <div class="screen" id="ticket-active">
+    <div class="topbar">
+      <button class="back" onclick="go('home')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+
+    <div class="active-ticket">
+      <div class="top">
+        <div>
+          <b>Aktiv nå</b>
+          <h3>Min posisjon → Moa</h3>
+        </div>
+        <div style="text-align: right;">
+          <b style="font-size: 13px;">42 kr</b>
+        </div>
+      </div>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <div class="qr">📱</div>
+        <div>
+          <div style="font-size: 11px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Vis sjåfør ved behov</div>
+          <div style="font-size: 14px; opacity: 0.9;">Voksen, enkeltbillett</div>
+          <div class="valid">Gyldig til 11:22</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="live-status">
+      <div class="ico">🚌</div>
+      <div class="info">
+        <b>Buss 625 nærmer seg</b>
+        <span>4 minutter til Keiser Wilhelms gate. Vi sier fra når du må gå om bord.</span>
+      </div>
+    </div>
+
+    <div class="stops-list">
+      <h4>Din rute</h4>
+      <div class="stop current">
+        <div class="dot"></div>
+        <div class="info"><b>Keiser Wilhelms gate</b></div>
+        <div class="time">09:52</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Sentrum terminal</div>
+        <div class="time">09:56</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Nørvøya</div>
+        <div class="time">10:02</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Åse</div>
+        <div class="time">10:08</div>
+      </div>
+      <div class="stop target">
+        <div class="dot"></div>
+        <div class="info"><b>Moa</b></div>
+        <div class="time">10:14</div>
+      </div>
+    </div>
+
+    <div class="help-bar">
+      <button class="btn" onclick="go('on-bus')">Jeg har gått om bord →</button>
+    </div>
+  </div>
+
+  <!-- ============ ON BUS ============ -->
+  <div class="screen" id="on-bus">
+    <div class="topbar">
+      <button class="back" onclick="go('ticket-active')">←</button>
+      <h1>Underveis</h1>
+      <div class="right"></div>
+    </div>
+
+    <div class="live-status" style="margin-top: 8px;">
+      <div class="ico">✓</div>
+      <div class="info">
+        <b>Du er på riktig buss</b>
+        <span>Buss 625 mot Moa. Vi sier fra når du må gå av.</span>
+      </div>
+    </div>
+
+    <div class="stops-list">
+      <h4>Stopp 2 av 5</h4>
+      <div class="stop passed">
+        <div class="dot"></div>
+        <div class="info">Keiser Wilhelms gate</div>
+        <div class="time">09:52</div>
+      </div>
+      <div class="stop current">
+        <div class="dot"></div>
+        <div class="info"><b>Sentrum terminal</b></div>
+        <div class="time">Nå</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Nørvøya</div>
+        <div class="time">10:02</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Åse</div>
+        <div class="time">10:08</div>
+      </div>
+      <div class="stop target">
+        <div class="dot"></div>
+        <div class="info"><b>Moa</b> — du går av her</div>
+        <div class="time">10:14</div>
+      </div>
+    </div>
+
+    <div style="margin: 0 24px 16px;">
+      <div style="background: var(--surface); border-radius: var(--radius-md); padding: 18px 20px; font-size: 14px; color: var(--muted); line-height: 1.55;">
+        💡 Du kan legge fra deg telefonen. Vi varsler deg når du nærmer deg Moa.
+      </div>
+    </div>
+
+    <div class="help-bar">
+      <button class="btn" onclick="go('wrong-bus')">Jeg tror jeg tok feil buss</button>
+    </div>
+  </div>
+
+  <!-- ============ WRONG BUS ============ -->
+  <div class="screen" id="wrong-bus">
+    <div class="topbar">
+      <button class="back" onclick="go('on-bus')">←</button>
+      <h1>Vi hjelper deg</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="reassure">
+        <div class="big">🤝</div>
+        <h3>Slapp av!</h3>
+        <p>Det skjer mange. Følg de tre stegene under, så er du tilbake på sporet.</p>
+      </div>
+
+      <div class="help-step">
+        <div><span class="num">1</span><b>Gå av ved neste stopp</b></div>
+        <p>Neste stopp er Sentrum terminal om 1 minutt. Trykk på stoppknappen i bussen.</p>
+      </div>
+      <div class="help-step">
+        <div><span class="num">2</span><b>Billetten din er fortsatt gyldig</b></div>
+        <p>Du kan ta riktig buss uten å betale på nytt. Billetten varer i 90 minutter fra du kjøpte den.</p>
+      </div>
+      <div class="help-step">
+        <div><span class="num">3</span><b>Søk etter ny rute</b></div>
+        <p>Vi finner riktig buss til deg fra Sentrum terminal til Moa.</p>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('search')" style="margin-top: 20px;">Søk ny rute</button>
+      <button class="btn btn-ghost" onclick="go('on-bus')" style="margin-top: 10px;">Nei, jeg er på riktig buss likevel</button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: GLOSSARY ============ -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <div class="grip"></div>
+      <h3 id="modal-title">Tittel</h3>
+      <p id="modal-body">Forklaring</p>
+      <button class="btn btn-primary" onclick="closeModal()">Greit</button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: HELP ============ -->
+  <div class="modal-bg" id="help-modal">
+    <div class="modal">
+      <div class="grip"></div>
+      <h3>Trenger du hjelp?</h3>
+      <p>Trykk på "Hjelp meg å reise" på forsiden, så guider vi deg fra start til mål. Du kan også åpne introduksjonen på nytt.</p>
+      <button class="btn btn-primary" onclick="closeModal('help-modal'); go('onb1');">Vis introduksjon på nytt</button>
+      <button class="btn btn-ghost" onclick="closeModal('help-modal')" style="margin-top: 10px;">Lukk</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function go(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      el.scrollTop = 0;
     }
+  }
 
-    function esc(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+  function selectPax(el) {
+    el.parentNode.querySelectorAll('.pax').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function selectPay(el) {
+    el.parentNode.querySelectorAll('.pay').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function toggleChip(el) {
+    el.classList.toggle('active');
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  const terms = {
+    voksen: { title: 'Voksen', body: 'Du regnes som voksen hvis du er mellom 16 og 66 år. Dette er den vanligste billettkategorien.' },
+    honnor: { title: 'Honnør', body: 'Du har rett på honnørbillett hvis du er fylt 67 år, eller hvis du har uføretrygd og kan vise gyldig dokumentasjon.' },
+    barn: { title: 'Barn', body: 'Barn mellom 6 og 15 år betaler barnebillett. Barn under 6 år reiser gratis i følge med en betalende voksen.' },
+    student: { title: 'Student', body: 'Du må ha gyldig studentbevis fra en godkjent utdanningsinstitusjon. Bevis kan vises digitalt eller på kort.' },
+    byttegyldighet: { title: '90 minutter', body: 'Billetten din varer i 90 minutter fra du kjøper den. I løpet av denne tiden kan du bytte buss så mange ganger du vil, så lenge du holder deg innenfor det området billetten gjelder.' },
+    alternativer: { title: 'Andre billettyper', body: 'Det finnes også 24-timersbillett og periodebillett (30 dager). For en enkelt reise i dag er enkeltbillett vanligvis billigst, og det er det vi har valgt for deg.' }
+  };
+
+  function openTermModal(key) {
+    const term = terms[key];
+    if (!term) return;
+    document.getElementById('modal-title').textContent = term.title;
+    document.getElementById('modal-body').textContent = term.body;
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('show');
+  }
+
+  function closeModal(id) {
+    if (id) {
+      document.getElementById(id).classList.remove('show');
+    } else {
+      document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('show'));
     }
+  }
 
-    $('menuBtn').onclick = () => toast('Meny kommer snart');
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', (e) => {
+      if (e.target === bg) closeModal();
+    });
+  });
+</script>
 
-    render();
-  </script>
 </body>
 </html>
