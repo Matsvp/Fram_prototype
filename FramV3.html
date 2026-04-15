@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRAM — Prototype v3</title>
+<style>
+  :root {
+    --fram-blue: #0B3B5C;
+    --fram-blue-light: #1B5478;
+    --accent: #F39200;
+    --green: #1F8A3C;
+    --green-light: #E8F5EB;
+    --red: #D14242;
+    --bg: #FFFFFF;
+    --surface: #F7F8FA;
+    --text: #0E0E10;
+    --muted: #6B7280;
+    --line: #EAECEF;
+    --line-strong: #D1D5DB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #1a1a1a;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 844px;
+    max-height: 95vh;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 10px solid #0a0a0a;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusbar {
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px 26px 6px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+    animation: fade 0.2s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Top bar */
+  .topbar {
+    padding: 14px 24px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .back {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--text);
+    cursor: pointer;
+    padding: 4px 8px 4px 0;
+    font-weight: 500;
+  }
+  .topbar h1 {
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+  }
+  .topbar .right {
+    width: 30px;
+  }
+
+  /* Generic content padding */
+  .content {
+    padding: 0 24px 24px;
+    flex: 1;
+  }
+
+  /* Typography */
+  .display {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .lead {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-bottom: 24px;
+  }
+  .h2 {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: -0.2px;
+  }
+  .small {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Buttons */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 17px 20px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    transition: transform 0.08s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--fram-blue);
+    color: #fff;
+  }
+  .btn-accent {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--fram-blue);
+    font-weight: 600;
+  }
+  .btn-outline {
+    background: #fff;
+    color: var(--text);
+    border: 1.5px solid var(--line-strong);
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-row .btn { flex: 1; }
+
+  /* ONBOARDING */
+  .onboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 28px 28px;
+  }
+  .onboard .skip {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 4px;
+  }
+  .onboard .ill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .ill-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 84px;
+  }
+  .onboard h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    letter-spacing: -0.4px;
+  }
+  .onboard p {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line-strong);
+  }
+  .dot.active {
+    background: var(--fram-blue);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  /* HOME */
+  .brand {
+    padding: 28px 28px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--fram-blue);
+    letter-spacing: -0.5px;
+  }
+  .icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .home-hero {
+    padding: 8px 28px 16px;
+  }
+  .home-hero h2 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.4px;
+  }
+  .home-hero p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .home-cards {
+    padding: 16px 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .home-card {
+    background: var(--surface);
+    border-radius: 22px;
+    padding: 22px 22px;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    transition: transform 0.1s;
+  }
+  .home-card:active { transform: scale(0.98); }
+  .home-card.primary {
+    background: var(--fram-blue);
+    color: #fff;
+  }
+  .home-card .ico {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .home-card.primary .ico {
+    background: rgba(255,255,255,0.18);
+  }
+  .home-card .txt b {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .home-card .txt span {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .home-card.primary .txt span {
+    color: rgba(255,255,255,0.8);
+  }
+  .home-card .arrow {
+    margin-left: auto;
+    font-size: 22px;
+    opacity: 0.6;
+  }
+
+  /* SEARCH */
+  .search-card {
+    background: var(--surface);
+    border-radius: 22px;
+    padding: 6px 18px;
+    margin-bottom: 16px;
+  }
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-row:last-child { border-bottom: none; }
+  .search-row .marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .marker.from { background: var(--fram-blue); }
+  .marker.to {
+    background: #fff;
+    border: 3px solid var(--accent);
+  }
+  .search-row .field {
+    flex: 1;
+  }
+  .search-row label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .search-row input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  .recent {
+    margin-top: 18px;
+  }
+  .recent-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
+  }
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .recent-item .pin {
+    width: 36px;
+    height: 36px;
+    background: var(--surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .recent-item .info b {
+    font-size: 15px;
+    font-weight: 600;
+    display: block;
+  }
+  .recent-item .info span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* RESULTS */
+  .chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .chip {
+    padding: 9px 16px;
+    background: var(--surface);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+    border: 1.5px solid transparent;
+  }
+  .chip.active {
+    background: var(--fram-blue);
+    color: #fff;
+  }
+
+  .route {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 22px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .route.recommended {
+    border: 2px solid var(--green);
+    background: var(--green-light);
+  }
+  .route .top {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .route .from-time {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .route .arrow {
+    color: var(--muted);
+    font-size: 16px;
+  }
+  .route .to-time {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .route .duration {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .route .legs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .leg.bus { background: var(--fram-blue); }
+  .leg.ferry { background: #2D7BBF; }
+  .leg.walk { background: #6B7280; }
+  .leg-arrow { color: var(--muted); font-size: 12px; }
+  .route .badge {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 9px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .route .info {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* PASSENGER TYPE */
+  .pax-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .pax {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .pax.selected {
+    border-color: var(--fram-blue);
+    background: #F0F5FA;
+  }
+  .pax .ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .pax .info { flex: 1; }
+  .pax .info b {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .pax .info span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .pax .help {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pax .check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .pax.selected .check {
+    background: var(--fram-blue);
+    border-color: var(--fram-blue);
+  }
+
+  /* TICKET SUGGEST */
+  .ticket-card {
+    background: var(--fram-blue);
+    color: #fff;
+    border-radius: 26px;
+    padding: 26px 24px;
+    margin-bottom: 18px;
+  }
+  .ticket-card .label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .ticket-card h2 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .ticket-card .price {
+    font-size: 38px;
+    font-weight: 800;
+    margin: 14px 0 4px;
+    letter-spacing: -1px;
+  }
+  .ticket-card .for {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-bottom: 18px;
+  }
+  .ticket-card .why {
+    background: rgba(255,255,255,0.1);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .ticket-card .why b {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+  }
+  .term {
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom: 1px dashed var(--accent);
+    cursor: pointer;
+  }
+  .term-light {
+    color: var(--fram-blue);
+    border-bottom-color: var(--fram-blue);
+  }
+
+  /* PAYMENT */
+  .pay {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .pay.selected {
+    border-color: var(--fram-blue);
+    background: #F0F5FA;
+  }
+  .pay .logo {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .logo.vipps { background: #FF5B24; }
+  .logo.card { background: var(--fram-blue); font-size: 22px; }
+  .logo.apple { background: #000; font-size: 22px; }
+  .pay .info { flex: 1; }
+  .pay .info b {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .pay .info span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .pay .check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .pay.selected .check {
+    background: var(--fram-blue);
+    border-color: var(--fram-blue);
+  }
+  .order-summary {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin: 16px 0;
+  }
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .order-row.total {
+    border-top: 1px solid var(--line);
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ACTIVE TICKET */
+  .active-ticket {
+    margin: 0 24px;
+    background: var(--fram-blue);
+    color: #fff;
+    border-radius: 26px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .active-ticket .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .active-ticket .top b {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  .active-ticket .top h3 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .active-ticket .qr {
+    width: 110px;
+    height: 110px;
+    background: #fff;
+    border-radius: 14px;
+    background-image:
+      linear-gradient(45deg, #000 25%, transparent 25%),
+      linear-gradient(-45deg, #000 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #000 75%),
+      linear-gradient(-45deg, transparent 75%, #000 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+  }
+  .active-ticket .valid {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 14px;
+  }
+
+  .live-status {
+    background: var(--green-light);
+    border: 1.5px solid var(--green);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin: 0 24px 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .live-status .ico {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .live-status .info b {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 2px;
+  }
+  .live-status .info span {
+    font-size: 13px;
+    color: #1a4528;
+    line-height: 1.4;
+  }
+
+  .stops-list {
+    margin: 0 24px 16px;
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px;
+  }
+  .stops-list h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+  .stop {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    position: relative;
+  }
+  .stop::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 22px;
+    bottom: -6px;
+    width: 2px;
+    background: var(--line-strong);
+  }
+  .stop:last-child::before { display: none; }
+  .stop .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--line-strong);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .stop.passed .dot {
+    background: var(--line-strong);
+    border-color: var(--line-strong);
+  }
+  .stop.current .dot {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px rgba(31,138,60,0.2);
+  }
+  .stop.target .dot {
+    background: #fff;
+    border: 3px solid var(--accent);
+  }
+  .stop .info {
+    flex: 1;
+    font-size: 14px;
+  }
+  .stop .info b { font-weight: 600; }
+  .stop.passed .info { color: var(--muted); }
+  .stop.current .info b { color: var(--green); font-weight: 700; }
+  .stop.target .info b { color: var(--accent); font-weight: 700; }
+  .stop .time {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .help-bar {
+    margin: 0 24px 24px;
+  }
+  .help-bar .btn {
+    background: #fff;
+    color: var(--red);
+    border: 1.5px solid var(--red);
+    font-weight: 600;
+  }
+
+  /* WRONG BUS HELP */
+  .reassure {
+    background: var(--green-light);
+    border-radius: 22px;
+    padding: 24px 22px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .reassure .big {
+    font-size: 44px;
+    margin-bottom: 8px;
+  }
+  .reassure h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .reassure p {
+    font-size: 14px;
+    color: #1a4528;
+    line-height: 1.5;
+  }
+  .help-step {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+  }
+  .help-step .num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--fram-blue);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .help-step b {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .help-step p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    margin-left: 38px;
+    line-height: 1.45;
+  }
+
+  /* GLOSSARY MODAL */
+  .modal-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    z-index: 100;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    width: 100%;
+    background: #fff;
+    border-radius: 26px 26px 0 0;
+    padding: 24px 26px 30px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal .grip {
+    width: 40px;
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+  .modal h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .modal p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+  .modal .btn { margin-top: 4px; }
+
+  /* CONFIRMATION */
+  .confirm-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 28px 28px;
+    text-align: center;
+  }
+  .confirm-screen .check-big {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 46px;
+    margin: 30px auto 22px;
+  }
+  .confirm-screen h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .confirm-screen p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .confirm-screen .receipt {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin: 24px 0;
+    text-align: left;
+  }
+
+  /* Bottom nav */
+  .nav {
+    border-top: 1px solid var(--line);
+    background: #fff;
+    padding: 10px 0 14px;
+    display: flex;
+    justify-content: space-around;
+    flex-shrink: 0;
+  }
+  .nav button {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .nav button.active { color: var(--fram-blue); }
+  .nav .ico { font-size: 22px; }
+
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <!-- ============ ONBOARDING 1 ============ -->
+  <div class="screen active" id="onb1">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🧭</div></div>
+      <h2>Velkommen til FRAM</h2>
+      <p>Den enkleste måten å reise med buss, ferje og hurtigbåt i Møre og Romsdal. Vi tar oss av det vanskelige.</p>
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('onb2')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ ONBOARDING 2 ============ -->
+  <div class="screen" id="onb2">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🎫</div></div>
+      <h2>Vi velger billetten</h2>
+      <p>Du trenger ikke vite hva en sone er, eller hvor lenge billetten varer. Vi finner riktig billett til deg.</p>
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('onb3')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ ONBOARDING 3 ============ -->
+  <div class="screen" id="onb3">
+    <div class="onboard">
+      <button class="skip" onclick="go('home')">Hopp over</button>
+      <div class="ill"><div class="ill-circle">🛎️</div></div>
+      <h2>Vi følger med under reisen</h2>
+      <p>Du får beskjed når du er på riktig buss, og varsel når du nærmer deg stoppet ditt. Du kan legge fra deg telefonen.</p>
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot active"></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('home')">Kom i gang</button>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="screen" id="home">
+    <div class="brand">
+      <div class="logo">FRAM</div>
+      <button class="icon-btn" onclick="openModal('help-modal')">?</button>
+    </div>
+    <div class="home-hero">
+      <h2>Hvor skal du i dag?</h2>
+      <p>Velg hvordan du vil reise</p>
+    </div>
+    <div class="home-cards">
+      <button class="home-card primary" onclick="go('search')">
+        <div class="ico">🧭</div>
+        <div class="txt">
+          <b>Hjelp meg å reise</b>
+          <span>Vi guider deg fra start til mål</span>
+        </div>
+        <div class="arrow">→</div>
+      </button>
+      <button class="home-card" onclick="go('search')">
+        <div class="ico">🔍</div>
+        <div class="txt">
+          <b>Søk reise selv</b>
+          <span>Jeg vet hvor jeg skal</span>
+        </div>
+        <div class="arrow">→</div>
+      </button>
+    </div>
+
+    <div class="content" style="margin-top: 26px;">
+      <div class="recent-title">Tidligere reiser</div>
+      <div class="recent-item" onclick="go('results')">
+        <div class="pin">📍</div>
+        <div class="info">
+          <b>Ålesund → Moa</b>
+          <span>Sist brukt i går</span>
+        </div>
+      </div>
+      <div class="recent-item" onclick="go('results-long')">
+        <div class="pin">⛴️</div>
+        <div class="info">
+          <b>Ålesund → Molde</b>
+          <span>Med ferje, sist brukt forrige uke</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="active"><div class="ico">🏠</div>Hjem</button>
+      <button onclick="go('search')"><div class="ico">🔍</div>Søk</button>
+      <button onclick="go('ticket-active')"><div class="ico">🎫</div>Billett</button>
+      <button onclick="openModal('help-modal')"><div class="ico">❓</div>Hjelp</button>
+    </div>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <div class="screen" id="search">
+    <div class="topbar">
+      <button class="back" onclick="go('home')">←</button>
+      <h1>Søk reise</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="search-card">
+        <div class="search-row">
+          <div class="marker from"></div>
+          <div class="field">
+            <label>Fra</label>
+            <input type="text" value="Min posisjon">
+          </div>
+        </div>
+        <div class="search-row">
+          <div class="marker to"></div>
+          <div class="field">
+            <label>Til</label>
+            <input type="text" placeholder="Hvor skal du?" value="Moa">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('results')">Søk</button>
+
+      <div class="recent">
+        <div class="recent-title">Forslag</div>
+        <div class="recent-item" onclick="go('results')">
+          <div class="pin">📍</div>
+          <div class="info">
+            <b>Moa</b>
+            <span>Kjøpesenter, Ålesund</span>
+          </div>
+        </div>
+        <div class="recent-item" onclick="go('results-long')">
+          <div class="pin">📍</div>
+          <div class="info">
+            <b>Molde sentrum</b>
+            <span>1 t 35 min med ferje</span>
+          </div>
+        </div>
+        <div class="recent-item" onclick="go('results')">
+          <div class="pin">📍</div>
+          <div class="info">
+            <b>Ålesund sykehus</b>
+            <span>Åse, Ålesund</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS - SHORT ============ -->
+  <div class="screen" id="results">
+    <div class="topbar">
+      <button class="back" onclick="go('search')">←</button>
+      <h1>Min posisjon → Moa</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="chips">
+        <div class="chip active">Nå</div>
+        <div class="chip">Senere i dag</div>
+        <div class="chip">I morgen</div>
+      </div>
+
+      <div class="route recommended" onclick="go('passenger')">
+        <span class="badge">✓ Anbefalt</span>
+        <div class="top">
+          <span class="from-time">09:52</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:14</span>
+          <span class="duration">22 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg walk">2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 625</span>
+        </div>
+        <div class="info">Direkte. Gå 2 min til Keiser Wilhelms gate.</div>
+      </div>
+
+      <div class="route" onclick="go('passenger')">
+        <div class="top">
+          <span class="from-time">10:07</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:31</span>
+          <span class="duration">24 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg walk">2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 24</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 11</span>
+        </div>
+        <div class="info">1 bytte på Sentrum.</div>
+      </div>
+
+      <div class="route" onclick="go('passenger')">
+        <div class="top">
+          <span class="from-time">10:22</span>
+          <span class="arrow">→</span>
+          <span class="to-time">10:44</span>
+          <span class="duration">22 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg walk">2 min</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 625</span>
+        </div>
+        <div class="info">Direkte.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS - LONG (with ferry) ============ -->
+  <div class="screen" id="results-long">
+    <div class="topbar">
+      <button class="back" onclick="go('search')">←</button>
+      <h1>Ålesund → Molde</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="chips">
+        <div class="chip active">Nå</div>
+        <div class="chip">Senere i dag</div>
+        <div class="chip">I morgen</div>
+      </div>
+
+      <div class="route recommended" onclick="go('passenger-long')">
+        <span class="badge">✓ Anbefalt</span>
+        <div class="top">
+          <span class="from-time">10:15</span>
+          <span class="arrow">→</span>
+          <span class="to-time">11:50</span>
+          <span class="duration">1 t 35 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg bus">Buss 681</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg ferry">Ferje</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 200</span>
+        </div>
+        <div class="info">Hele turen er én billett. Du trenger ikke kjøpe ny ved bytte.</div>
+      </div>
+
+      <div class="route" onclick="go('passenger-long')">
+        <div class="top">
+          <span class="from-time">11:15</span>
+          <span class="arrow">→</span>
+          <span class="to-time">12:55</span>
+          <span class="duration">1 t 40 min</span>
+        </div>
+        <div class="legs">
+          <span class="leg bus">Buss 681</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg ferry">Ferje</span>
+          <span class="leg-arrow">→</span>
+          <span class="leg bus">Buss 200</span>
+        </div>
+        <div class="info">Hele turen er én billett.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PASSENGER TYPE - SHORT ============ -->
+  <div class="screen" id="passenger">
+    <div class="topbar">
+      <button class="back" onclick="go('results')">←</button>
+      <h1>Hvem reiser?</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg passasjertype. Trykk på spørsmålstegnet hvis du er usikker.</p>
+      <div class="pax-list">
+        <div class="pax selected" onclick="selectPax(this)">
+          <div class="ico">🧑</div>
+          <div class="info">
+            <b>Voksen</b>
+            <span>16-66 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('voksen')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">👴</div>
+          <div class="info">
+            <b>Honnør</b>
+            <span>67 år og over</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('honnor')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🧒</div>
+          <div class="info">
+            <b>Barn</b>
+            <span>6-15 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('barn')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🎓</div>
+          <div class="info">
+            <b>Student</b>
+            <span>Krever gyldig studentbevis</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('student')">?</button>
+          <div class="check">✓</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-suggest')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ PASSENGER TYPE - LONG ============ -->
+  <div class="screen" id="passenger-long">
+    <div class="topbar">
+      <button class="back" onclick="go('results-long')">←</button>
+      <h1>Hvem reiser?</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg passasjertype. Trykk på spørsmålstegnet hvis du er usikker.</p>
+      <div class="pax-list">
+        <div class="pax selected" onclick="selectPax(this)">
+          <div class="ico">🧑</div>
+          <div class="info">
+            <b>Voksen</b>
+            <span>16-66 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('voksen')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">👴</div>
+          <div class="info">
+            <b>Honnør</b>
+            <span>67 år og over</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('honnor')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🧒</div>
+          <div class="info">
+            <b>Barn</b>
+            <span>6-15 år</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('barn')">?</button>
+          <div class="check">✓</div>
+        </div>
+        <div class="pax" onclick="selectPax(this)">
+          <div class="ico">🎓</div>
+          <div class="info">
+            <b>Student</b>
+            <span>Krever gyldig studentbevis</span>
+          </div>
+          <button class="help" onclick="event.stopPropagation(); openTermModal('student')">?</button>
+          <div class="check">✓</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-suggest-long')">Fortsett</button>
+    </div>
+  </div>
+
+  <!-- ============ TICKET SUGGEST - SHORT (NO ZONE LANGUAGE) ============ -->
+  <div class="screen" id="ticket-suggest">
+    <div class="topbar">
+      <button class="back" onclick="go('passenger')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="ticket-card">
+        <div class="label">✓ Vi har valgt for deg</div>
+        <h2>Enkeltbillett, voksen</h2>
+        <div class="price">42 kr</div>
+        <div class="for">Innenfor Ålesund</div>
+        <div class="why">
+          <b>Hvorfor denne?</b>
+          Reisen din er innenfor Ålesund. Billetten varer i <span class="term" onclick="openTermModal('byttegyldighet')">90 minutter</span>, så du kan bytte buss gratis underveis.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('payment')">Kjøp for 42 kr</button>
+      <button class="btn btn-ghost" onclick="openTermModal('alternativer')" style="margin-top: 8px;">Se andre billettyper</button>
+    </div>
+  </div>
+
+  <!-- ============ TICKET SUGGEST - LONG ============ -->
+  <div class="screen" id="ticket-suggest-long">
+    <div class="topbar">
+      <button class="back" onclick="go('passenger-long')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="ticket-card">
+        <div class="label">✓ Vi har valgt for deg</div>
+        <h2>Enkeltbillett, voksen</h2>
+        <div class="price">189 kr</div>
+        <div class="for">Mellom Ålesund og Molde</div>
+        <div class="why">
+          <b>Hvorfor denne?</b>
+          Hele turen er inkludert. Du trenger ikke kjøpe ny billett når du bytter til ferje eller buss underveis.
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('payment')">Kjøp for 189 kr</button>
+      <button class="btn btn-ghost" onclick="openTermModal('alternativer')" style="margin-top: 8px;">Se andre billettyper</button>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENT ============ -->
+  <div class="screen" id="payment">
+    <div class="topbar">
+      <button class="back" onclick="go('ticket-suggest')">←</button>
+      <h1>Betal</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <p class="lead">Velg betalingsmåte</p>
+      <div class="pay selected" onclick="selectPay(this)">
+        <div class="logo vipps">vipps</div>
+        <div class="info">
+          <b>Vipps</b>
+          <span>Bekreft med fingeravtrykk</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="logo card">💳</div>
+        <div class="info">
+          <b>Bankkort</b>
+          <span>Visa •••• 4821</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+      <div class="pay" onclick="selectPay(this)">
+        <div class="logo apple"></div>
+        <div class="info">
+          <b>Apple Pay</b>
+          <span>Bekreft med Face ID</span>
+        </div>
+        <div class="check">✓</div>
+      </div>
+
+      <div class="order-summary">
+        <div class="order-row"><span>Enkeltbillett, voksen</span><span>42 kr</span></div>
+        <div class="order-row"><span>Innenfor Ålesund</span><span></span></div>
+        <div class="order-row total"><span>Å betale</span><span>42 kr</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('confirm')">Betal 42 kr</button>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM ============ -->
+  <div class="screen" id="confirm">
+    <div class="confirm-screen">
+      <div class="check-big">✓</div>
+      <h2>Billetten er klar</h2>
+      <p>Du er klar til å reise</p>
+      <div class="receipt">
+        <div class="order-row"><span>Enkeltbillett, voksen</span><span>42 kr</span></div>
+        <div class="order-row"><span>Betalt med Vipps</span><span></span></div>
+        <div class="order-row total"><span>Totalt</span><span>42 kr</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="go('ticket-active')">Se billetten min</button>
+    </div>
+  </div>
+
+  <!-- ============ ACTIVE TICKET (BEFORE BOARDING) ============ -->
+  <div class="screen" id="ticket-active">
+    <div class="topbar">
+      <button class="back" onclick="go('home')">←</button>
+      <h1>Din billett</h1>
+      <div class="right"></div>
+    </div>
+
+    <div class="active-ticket">
+      <div class="top">
+        <div>
+          <b>Aktiv nå</b>
+          <h3>Min posisjon → Moa</h3>
+        </div>
+        <div style="text-align: right;">
+          <b>42 kr</b>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: center;">
+        <div class="qr"></div>
+        <div>
+          <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Vis sjåfør ved behov</div>
+          <div style="font-size: 13px; opacity: 0.9;">Voksen, enkeltbillett</div>
+          <div class="valid">Gyldig til 11:22</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="live-status">
+      <div class="ico">🚌</div>
+      <div class="info">
+        <b>Buss 625 nærmer seg</b>
+        <span>4 minutter til Keiser Wilhelms gate. Vi sier fra når du må gå om bord.</span>
+      </div>
+    </div>
+
+    <div class="stops-list">
+      <h4>Din rute</h4>
+      <div class="stop current">
+        <div class="dot"></div>
+        <div class="info"><b>Keiser Wilhelms gate</b></div>
+        <div class="time">09:52</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Sentrum terminal</div>
+        <div class="time">09:56</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Nørvøya</div>
+        <div class="time">10:02</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Åse</div>
+        <div class="time">10:08</div>
+      </div>
+      <div class="stop target">
+        <div class="dot"></div>
+        <div class="info"><b>Moa</b></div>
+        <div class="time">10:14</div>
+      </div>
+    </div>
+
+    <div class="help-bar">
+      <button class="btn" onclick="go('on-bus')">Jeg har gått om bord →</button>
+    </div>
+  </div>
+
+  <!-- ============ ON BUS - "RIGHT BUS" CONFIRMATION ============ -->
+  <div class="screen" id="on-bus">
+    <div class="topbar">
+      <button class="back" onclick="go('ticket-active')">←</button>
+      <h1>Underveis</h1>
+      <div class="right"></div>
+    </div>
+
+    <div class="live-status" style="margin-top: 8px;">
+      <div class="ico">✓</div>
+      <div class="info">
+        <b>Du er på riktig buss</b>
+        <span>Buss 625 mot Moa. Vi sier fra når du må gå av.</span>
+      </div>
+    </div>
+
+    <div class="stops-list">
+      <h4>Stopp 2 av 5</h4>
+      <div class="stop passed">
+        <div class="dot"></div>
+        <div class="info">Keiser Wilhelms gate</div>
+        <div class="time">09:52</div>
+      </div>
+      <div class="stop current">
+        <div class="dot"></div>
+        <div class="info"><b>Sentrum terminal</b></div>
+        <div class="time">Nå</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Nørvøya</div>
+        <div class="time">10:02</div>
+      </div>
+      <div class="stop">
+        <div class="dot"></div>
+        <div class="info">Åse</div>
+        <div class="time">10:08</div>
+      </div>
+      <div class="stop target">
+        <div class="dot"></div>
+        <div class="info"><b>Moa</b> — du går av her</div>
+        <div class="time">10:14</div>
+      </div>
+    </div>
+
+    <div style="margin: 0 24px 14px;">
+      <div style="background: var(--surface); border-radius: 18px; padding: 16px 20px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+        💡 Du kan legge fra deg telefonen. Vi varsler deg når du nærmer deg Moa.
+      </div>
+    </div>
+
+    <div class="help-bar">
+      <button class="btn" onclick="go('wrong-bus')">Jeg tror jeg tok feil buss</button>
+    </div>
+  </div>
+
+  <!-- ============ WRONG BUS HELP ============ -->
+  <div class="screen" id="wrong-bus">
+    <div class="topbar">
+      <button class="back" onclick="go('on-bus')">←</button>
+      <h1>Vi hjelper deg</h1>
+      <div class="right"></div>
+    </div>
+    <div class="content">
+      <div class="reassure">
+        <div class="big">🤝</div>
+        <h3>Slapp av</h3>
+        <p>Det skjer mange. Følg de tre stegene under, så er du tilbake på sporet.</p>
+      </div>
+
+      <div class="help-step">
+        <div><span class="num">1</span><b>Gå av ved neste stopp</b></div>
+        <p>Neste stopp er Sentrum terminal om 1 minutt. Trykk på stoppknappen i bussen.</p>
+      </div>
+      <div class="help-step">
+        <div><span class="num">2</span><b>Billetten din er fortsatt gyldig</b></div>
+        <p>Du kan ta riktig buss uten å betale på nytt. Billetten varer i 90 minutter fra du kjøpte den.</p>
+      </div>
+      <div class="help-step">
+        <div><span class="num">3</span><b>Søk etter ny rute</b></div>
+        <p>Vi finner riktig buss til deg fra Sentrum terminal til Moa.</p>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('search')" style="margin-top: 18px;">Søk ny rute</button>
+      <button class="btn btn-ghost" onclick="go('on-bus')" style="margin-top: 8px;">Nei, jeg er på riktig buss likevel</button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: GLOSSARY ============ -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <div class="grip"></div>
+      <h3 id="modal-title">Tittel</h3>
+      <p id="modal-body">Forklaring</p>
+      <button class="btn btn-primary" onclick="closeModal()">Greit</button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: HELP ============ -->
+  <div class="modal-bg" id="help-modal">
+    <div class="modal">
+      <div class="grip"></div>
+      <h3>Trenger du hjelp?</h3>
+      <p>Trykk på "Hjelp meg å reise" på forsiden, så guider vi deg fra start til mål. Du kan også åpne onboardingen på nytt for å lære hvordan FRAM fungerer.</p>
+      <button class="btn btn-primary" onclick="closeModal('help-modal'); go('onb1');">Vis introduksjon på nytt</button>
+      <button class="btn btn-ghost" onclick="closeModal('help-modal')" style="margin-top: 8px;">Lukk</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function go(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      el.scrollTop = 0;
+    }
+  }
+  function selectPax(el) {
+    el.parentNode.querySelectorAll('.pax').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function selectPay(el) {
+    el.parentNode.querySelectorAll('.pay').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  const terms = {
+    voksen: { title: 'Voksen', body: 'Du regnes som voksen hvis du er mellom 16 og 66 år. Dette er den vanligste billettkategorien.' },
+    honnor: { title: 'Honnør', body: 'Du har rett på honnørbillett hvis du er fylt 67 år, eller hvis du har uføretrygd og kan vise gyldig dokumentasjon.' },
+    barn: { title: 'Barn', body: 'Barn mellom 6 og 15 år betaler barnebillett. Barn under 6 år reiser gratis i følge med en betalende voksen.' },
+    student: { title: 'Student', body: 'Du må ha gyldig studentbevis fra en godkjent utdanningsinstitusjon. Bevis kan vises digitalt eller på kort.' },
+    byttegyldighet: { title: '90 minutter', body: 'Billetten din varer i 90 minutter fra du kjøper den. I løpet av denne tiden kan du bytte buss så mange ganger du vil, så lenge du holder deg innenfor det området billetten gjelder.' },
+    alternativer: { title: 'Andre billettyper', body: 'Det finnes også 24-timersbillett og periodebillett (30 dager). For en enkelt reise i dag er enkeltbillett vanligvis billigst, og det er det vi har valgt for deg.' }
+  };
+
+  function openTermModal(key) {
+    const term = terms[key];
+    if (!term) return;
+    document.getElementById('modal-title').textContent = term.title;
+    document.getElementById('modal-body').textContent = term.body;
+    document.getElementById('modal').classList.add('show');
+  }
+  function openModal(id) {
+    document.getElementById(id).classList.add('show');
+  }
+  function closeModal(id) {
+    if (id) {
+      document.getElementById(id).classList.remove('show');
+    } else {
+      document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('show'));
+    }
+  }
+
+  // Click outside modal to close
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', (e) => {
+      if (e.target === bg) closeModal();
+    });
+  });
+</script>
+
+</body>
+</html>
